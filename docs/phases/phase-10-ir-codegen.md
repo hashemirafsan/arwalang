@@ -12,24 +12,48 @@ Define compiler IR and start lowering validated AST into IR, then wire a Craneli
   - `IrError` and `IrGenerator`
 - Implemented initial lowering pass:
   - module name extraction from AST
+  - class declaration lowering into nominal IR struct definitions
   - class method lowering into IR functions
   - basic statement lowering (`let`, `return`, expression call)
   - fallback `Return(None)` insertion for non-returning blocks
+- Connected static-table lowering into IR generation:
+  - DI registry from phase-6 graph (`token -> factory function`)
+  - route table from phase-8 registry (`method, path, handler`)
+  - lifecycle pipeline registry from phase-9 output (`guards/pipes/interceptors`)
 - Added initial IR tests:
   - generates functions from class methods
   - lowers return literal instruction
   - lowers parameter types
+  - generates static DI registry
+  - generates static route table
 - Added codegen backend contract in `src/codegen/mod.rs`:
   - `CodegenBackend` trait
-  - `CraneliftBackend` skeleton
   - `CodegenError`
-  - test that confirms backend is wired and explicitly not implemented yet
+- Implemented Cranelift object backend in `src/codegen/cranelift.rs`:
+  - host ISA initialization via Cranelift native builder
+  - IR function signature mapping and function declaration/definition
+  - instruction lowering for `store` and `return` subset
+  - object emission (`Vec<u8>`) for compiled module
+  - backend tests for empty module and simple function object generation
+- Added runtime crate scaffold in `runtime/`:
+  - static route/DI/pipeline table reader structures
+  - minimal request dispatch facade
+  - runtime unit tests for route resolution, DI lookup, and dispatch behavior
+- Added linker utilities in `src/codegen/linker.rs`:
+  - write object output into dist paths
+  - invoke system linker (`cc`) for object -> executable step
+- Added codegen orchestration helpers in `src/codegen/mod.rs`:
+  - `compile_to_object` (IR -> Cranelift object -> `dist/<name>.o`)
+  - `compile_to_executable` (object -> linked `dist/<name>`)
+  - unit test that verifies object artifact output path creation
 
 ## Current Gaps
 
 - No full control-flow lowering yet (branching/basic-block graph still minimal).
-- Static DI/route/pipeline table population in IR is not connected yet.
-- Cranelift translation/object emission/runtime linking remain pending.
+- Runtime linking currently uses a temporary bootstrap entrypoint and does not yet bind to full runtime crate startup.
+- `call` instruction lowering is currently placeholder-only.
+- Cross-platform linker behavior is not finalized.
+- Runtime crate currently provides dispatch/table plumbing only (no TCP listener or HTTP parser yet).
 
 ## Validation Performed
 
@@ -41,4 +65,4 @@ cargo test
 
 ## Next Step
 
-Complete static table lowering into IR and start concrete Cranelift module/object generation.
+Complete runtime bootstrap integration and remove temporary bootstrap linker shim.

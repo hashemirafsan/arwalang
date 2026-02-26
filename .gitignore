@@ -1,5 +1,18 @@
 /target/
+**/target/
 **/*.rs.bk
+
+# Build artifacts
+/dist/
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+
+# Nested crate lockfiles (root Cargo.lock stays tracked)
+/runtime/Cargo.lock
 
 # IDE/editor
 .DS_Store

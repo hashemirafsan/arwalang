@@ -703,48 +703,48 @@ Execution policy for this phase:
 - [x] Implement `IrGenerator` struct
 - [x] Implement `generate_ir(ast: &SourceFile) -> Result<IrModule, IrError>`
 - [x] Lower module declarations to IR
-- [ ] Lower class declarations to struct definitions
+- [x] Lower class declarations to struct definitions
 - [x] Lower methods to IR functions
 - [x] Lower expressions to IR instructions
 - [x] Lower statements to IR instructions
 
 ### 10.3 Generate Static Tables in IR
-- [ ] Generate DI registry as static data
-  - [ ] Map of token string → factory function pointer
-- [ ] Generate route table as static data
-  - [ ] Array of (method, path, handler_fn_ptr)
-- [ ] Generate lifecycle pipelines as static data
-  - [ ] Per-route array of lifecycle function pointers
+- [x] Generate DI registry as static data
+  - [x] Map of token string → factory function pointer
+- [x] Generate route table as static data
+  - [x] Array of (method, path, handler_fn_ptr)
+- [x] Generate lifecycle pipelines as static data
+  - [x] Per-route array of lifecycle function pointers
 
 ### 10.4 Implement Cranelift Backend
 - [x] Create `src/codegen/mod.rs`
-- [ ] Create `src/codegen/cranelift.rs`
-- [ ] Add Cranelift dependencies to Cargo.toml
-  - [ ] cranelift-codegen
-  - [ ] cranelift-frontend
-  - [ ] cranelift-module
-  - [ ] cranelift-object
+- [x] Create `src/codegen/cranelift.rs`
+- [x] Add Cranelift dependencies to Cargo.toml
+  - [x] cranelift-codegen
+  - [x] cranelift-frontend
+  - [x] cranelift-module
+  - [x] cranelift-object
 - [x] Implement `CraneliftBackend` struct
-- [~] Implement `compile(ir: &IrModule) -> Result<Vec<u8>, CodegenError>`
-  - [ ] Initialize Cranelift ISA and module
-  - [ ] Translate IR functions to Cranelift IR
-  - [ ] Compile to machine code
-  - [ ] Generate object file
-- [ ] Phase gate: do not start LLVM tasks until Cranelift-based executable generation succeeds for minimal app.
+- [x] Implement `compile(ir: &IrModule) -> Result<Vec<u8>, CodegenError>`
+  - [x] Initialize Cranelift ISA and module
+  - [x] Translate IR functions to Cranelift IR
+  - [x] Compile to machine code
+  - [x] Generate object file
+- [x] Phase gate: do not start LLVM tasks until Cranelift-based executable generation succeeds for minimal app.
 
 ### 10.5 Link Runtime
-- [ ] Create minimal Rust runtime crate
+- [~] Create minimal Rust runtime crate
   - [ ] HTTP server (TCP listener, HTTP/1.1 parser)
-  - [ ] Route dispatcher (reads static route table)
-  - [ ] DI container (reads static DI registry)
+  - [x] Route dispatcher (reads static route table)
+  - [x] DI container (reads static DI registry)
   - [ ] JSON serializer/deserializer
-  - [ ] Lifecycle pipeline executor
-- [ ] Link generated code with runtime
-- [ ] Produce final executable binary
+  - [x] Lifecycle pipeline executor
+- [~] Link generated code with runtime
+- [x] Produce final executable binary
 
 ### 10.6 Output Binary
-- [ ] Implement binary output to `./dist/<name>`
-- [ ] Make binary executable
+- [x] Implement binary output to `./dist/<name>`
+- [x] Make binary executable
 - [ ] Handle cross-platform concerns (if needed)
 
 ### 10.7 Optional LLVM Backend
@@ -754,12 +754,12 @@ Execution policy for this phase:
 - [ ] Add `--features llvm` build option
 
 ### 10.8 Codegen Tests
-- [ ] Unit test: generate IR from simple class
+- [x] Unit test: generate IR from simple class
 - [ ] Unit test: generate IR from method with expressions
-- [ ] Unit test: generate static DI registry
-- [ ] Unit test: generate static route table
-- [ ] Integration test: compile minimal program to binary
-- [ ] Integration test: run generated binary
+- [x] Unit test: generate static DI registry
+- [x] Unit test: generate static route table
+- [x] Integration test: compile minimal program to binary
+- [x] Integration test: run generated binary
 - [ ] Integration test: verify HTTP server responds
 
 ---
@@ -845,40 +845,40 @@ Execution policy for this phase:
   - [ ] Print success message with next steps
 
 ### 12.3 Implement `arwa build` Command
-- [ ] Create `src/cli/build.rs`
-- [ ] Define command arguments (optional: output path, optimization level)
-- [ ] Implement `run(args: BuildArgs) -> Result<(), Error>`
+- [x] Create `src/cli/build.rs`
+- [x] Define command arguments (optional: output path, optimization level)
+- [x] Implement `run(args: BuildArgs) -> Result<(), Error>`
   - [ ] Read all `.rw` source files
-  - [ ] Run lexer phase
-  - [ ] Run parser phase
-  - [ ] Run resolver phase
-  - [ ] Run type checker phase
-  - [ ] Run annotation processor phase
-  - [ ] Run DI graph validator phase
-  - [ ] Run module graph validator phase
-  - [ ] Run route table builder phase
-  - [ ] Run lifecycle pipeline builder phase
-  - [ ] Generate IR
-  - [ ] Run codegen
-  - [ ] Output binary to `./dist/<name>`
-  - [ ] Print compilation summary
+  - [x] Run lexer phase
+  - [x] Run parser phase
+  - [x] Run resolver phase
+  - [x] Run type checker phase
+  - [x] Run annotation processor phase
+  - [x] Run DI graph validator phase
+  - [x] Run module graph validator phase
+  - [x] Run route table builder phase
+  - [x] Run lifecycle pipeline builder phase
+  - [x] Generate IR
+  - [x] Run codegen
+  - [x] Output binary to `./dist/<name>`
+  - [x] Print compilation summary
 
 ### 12.4 Implement `arwa check` Command
-- [ ] Create `src/cli/check.rs`
-- [ ] Define command arguments (optional: format)
-- [ ] Implement `run(args: CheckArgs) -> Result<(), Error>`
-  - [ ] Run phases 1-9 (all validation, no codegen)
-  - [ ] Report errors and warnings
+- [x] Create `src/cli/check.rs`
+- [x] Define command arguments (optional: format)
+- [x] Implement `run(args: CheckArgs) -> Result<(), Error>`
+  - [x] Run phases 1-9 (all validation, no codegen)
+  - [x] Report errors and warnings
   - [ ] Exit with appropriate code
 
 ### 12.5 Implement `arwa run` Command
-- [ ] Create `src/cli/run.rs`
-- [ ] Define command arguments (optional: port, env)
-- [ ] Implement `run(args: RunArgs) -> Result<(), Error>`
-  - [ ] Run `arwa build`
-  - [ ] If build succeeds, execute output binary
+- [x] Create `src/cli/run.rs`
+- [x] Define command arguments (optional: port, env)
+- [x] Implement `run(args: RunArgs) -> Result<(), Error>`
+  - [x] Run `arwa build`
+  - [x] If build succeeds, execute output binary
   - [ ] Pass through command-line arguments
-  - [ ] Stream output to stdout/stderr
+  - [x] Stream output to stdout/stderr
 
 ### 12.6 Implement `arwa add` Command
 - [ ] Create `src/cli/add.rs`
@@ -913,12 +913,12 @@ Execution policy for this phase:
 
 ### 12.9 CLI Tests
 - [ ] Integration test: `arwa new` creates project
-- [ ] Integration test: `arwa build` compiles minimal project
+- [x] Integration test: `arwa build` compiles minimal project
 - [ ] Integration test: `arwa check` validates without codegen
-- [ ] Integration test: `arwa run` executes binary
+- [x] Integration test: `arwa run` executes binary
 - [ ] Integration test: `arwa add` adds feature
 - [ ] Integration test: `arwa fmt` formats files
-- [ ] Unit test: CLI argument parsing
+- [x] Unit test: CLI argument parsing
 - [ ] Unit test: error handling and exit codes
 
 ---

@@ -22,6 +22,7 @@ This directory contains phase-oriented implementation documentation for the Arwa
 - `docs/phases/phase-08-route-table.md`: implementation record for Phase 8.
 - `docs/phases/phase-09-lifecycle-pipeline.md`: implementation record for Phase 9.
 - `docs/phases/phase-10-ir-codegen.md`: implementation record for Phase 10 (in progress).
+- `docs/phases/phase-12-cli.md`: implementation record for Phase 12 (in progress).
 - `docs/phases/template.md`: template to document upcoming phases.
 
 ## Update Policy

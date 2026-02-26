@@ -2,7 +2,10 @@
 
 use thiserror::Error;
 
+use crate::di::graph::DiGraphBuilder;
+use crate::lifecycle::pipeline::PipelineBuilder;
 use crate::parser::ast::{Expr, SourceFile, Stmt, TopLevelItem, TypeExpr};
+use crate::routes::registry::RouteTableBuilder;
 
 /// Compiler IR type model.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -65,6 +68,13 @@ pub struct IrFunction {
     pub blocks: Vec<IrBlock>,
 }
 
+/// One lowered nominal data shape for class/struct declarations.
+#[derive(Debug, Clone, PartialEq)]
+pub struct IrStruct {
+    pub name: String,
+    pub fields: Vec<(String, IrType)>,
+}
+
 /// Static DI registry IR entry.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DiRegistryEntry {
@@ -93,6 +103,7 @@ pub struct PipelineRegistryEntry {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct IrModule {
     pub name: String,
+    pub structs: Vec<IrStruct>,
     pub functions: Vec<IrFunction>,
     pub di_registry: Vec<DiRegistryEntry>,
     pub route_table: Vec<RouteRegistryEntry>,
@@ -104,6 +115,9 @@ pub struct IrModule {
 pub enum IrError {
     #[error("missing module declaration for IR generation")]
     MissingModule,
+
+    #[error("prerequisite phase failed while lowering IR: {phase}")]
+    PrerequisiteFailed { phase: String },
 }
 
 /// AST-to-IR lowering entrypoint.
@@ -118,6 +132,26 @@ impl IrGenerator {
 
     /// Generates IR module from validated AST.
     pub fn generate_ir(&self, ast: &SourceFile) -> Result<IrModule, IrError> {
+        let mut di_builder = DiGraphBuilder::new();
+        let di_graph = di_builder
+            .build(ast)
+            .map_err(|_| IrError::PrerequisiteFailed {
+                phase: "DI graph".to_string(),
+            })?;
+
+        let route_table =
+            RouteTableBuilder::new()
+                .build(ast)
+                .map_err(|_| IrError::PrerequisiteFailed {
+                    phase: "route table".to_string(),
+                })?;
+
+        let pipelines = PipelineBuilder::new()
+            .build(&route_table, ast)
+            .map_err(|_| IrError::PrerequisiteFailed {
+                phase: "lifecycle pipeline".to_string(),
+            })?;
+
         let module_name = ast
             .items
             .iter()
@@ -136,6 +170,15 @@ impl IrGenerator {
             let TopLevelItem::Class(class) = item else {
                 continue;
             };
+
+            ir.structs.push(IrStruct {
+                name: class.name.clone(),
+                fields: class
+                    .fields
+                    .iter()
+                    .map(|field| (field.name.clone(), lower_type(&field.ty)))
+                    .collect(),
+            });
 
             for method in &class.methods {
                 let mut block = IrBlock {
@@ -163,6 +206,47 @@ impl IrGenerator {
                 });
             }
         }
+
+        ir.di_registry = di_graph
+            .providers
+            .iter()
+            .map(|provider| DiRegistryEntry {
+                token: provider.token.clone(),
+                factory_fn: format!("factory::{}", provider.implementation),
+            })
+            .collect();
+        ir.di_registry.sort_by(|a, b| a.token.cmp(&b.token));
+
+        ir.route_table = route_table
+            .get_routes()
+            .iter()
+            .map(|route| RouteRegistryEntry {
+                method: route.method.to_string(),
+                path: route.path.clone(),
+                handler_fn: route.handler.clone(),
+            })
+            .collect();
+        ir.route_table.sort_by(|a, b| {
+            a.path
+                .cmp(&b.path)
+                .then_with(|| a.method.cmp(&b.method))
+                .then_with(|| a.handler_fn.cmp(&b.handler_fn))
+        });
+
+        ir.pipelines = pipelines
+            .iter()
+            .map(|(route, pipeline)| PipelineRegistryEntry {
+                handler_fn: route.handler.clone(),
+                guards: pipeline.guards.iter().map(|c| c.name.clone()).collect(),
+                pipes: pipeline.pipes.iter().map(|c| c.name.clone()).collect(),
+                interceptors: pipeline
+                    .interceptors
+                    .iter()
+                    .map(|c| c.name.clone())
+                    .collect(),
+            })
+            .collect();
+        ir.pipelines.sort_by(|a, b| a.handler_fn.cmp(&b.handler_fn));
 
         Ok(ir)
     }
@@ -260,8 +344,8 @@ mod tests {
     use std::path::PathBuf;
 
     use crate::parser::ast::{
-        Block, ClassDecl, MethodDecl, ModuleDecl, Param, SourceFile, Span, Stmt, TopLevelItem,
-        TypeExpr,
+        Annotation, AnnotationArg, Block, ClassDecl, Expr, MethodDecl, ModuleDecl, Param,
+        SourceFile, Span, Stmt, TopLevelItem, TypeExpr,
     };
 
     use super::{IrGenerator, IrInstruction, IrType, IrValue};
@@ -308,6 +392,45 @@ mod tests {
             constructor: None,
             methods,
             fields: vec![],
+            span: span(),
+        }
+    }
+
+    fn injectable_class(name: &str, methods: Vec<MethodDecl>) -> ClassDecl {
+        let mut c = class(name, methods);
+        c.annotations.push(Annotation {
+            name: "injectable".to_string(),
+            args: vec![],
+            span: span(),
+        });
+        c
+    }
+
+    fn controller_class(name: &str, prefix: &str, methods: Vec<MethodDecl>) -> ClassDecl {
+        let mut c = class(name, methods);
+        c.annotations.push(Annotation {
+            name: "controller".to_string(),
+            args: vec![AnnotationArg::Positional(Expr::StringLit(
+                prefix.to_string(),
+            ))],
+            span: span(),
+        });
+        c
+    }
+
+    fn route_method(name: &str, ann: &str, path: &str) -> MethodDecl {
+        MethodDecl {
+            annotations: vec![Annotation {
+                name: ann.to_string(),
+                args: vec![AnnotationArg::Positional(Expr::StringLit(path.to_string()))],
+                span: span(),
+            }],
+            name: name.to_string(),
+            params: vec![],
+            return_type: TypeExpr::Named("Int".to_string()),
+            body: Block {
+                stmts: vec![Stmt::Return(Some(Expr::IntLit(1)))],
+            },
             span: span(),
         }
     }
@@ -392,5 +515,47 @@ mod tests {
         assert_eq!(ir.functions[0].params.len(), 2);
         assert_eq!(ir.functions[0].params[0], ("a".to_string(), IrType::Int));
         assert_eq!(ir.functions[0].params[1], ("b".to_string(), IrType::Int));
+    }
+
+    #[test]
+    fn generates_static_di_registry() {
+        let mut app = module("App");
+        app.providers = vec![crate::parser::ast::ProviderBinding::Simple(
+            "Repo".to_string(),
+        )];
+
+        let ast = SourceFile {
+            path: PathBuf::from("test.rw"),
+            items: vec![
+                TopLevelItem::Module(app),
+                TopLevelItem::Class(injectable_class("Repo", vec![])),
+            ],
+        };
+
+        let ir = IrGenerator::new().generate_ir(&ast).expect("must lower");
+        assert_eq!(ir.di_registry.len(), 1);
+        assert_eq!(ir.di_registry[0].token, "Repo");
+        assert_eq!(ir.di_registry[0].factory_fn, "factory::Repo");
+    }
+
+    #[test]
+    fn generates_static_route_table() {
+        let ast = SourceFile {
+            path: PathBuf::from("test.rw"),
+            items: vec![
+                TopLevelItem::Module(module("App")),
+                TopLevelItem::Class(controller_class(
+                    "UserController",
+                    "/users",
+                    vec![route_method("list", "get", "/")],
+                )),
+            ],
+        };
+
+        let ir = IrGenerator::new().generate_ir(&ast).expect("must lower");
+        assert_eq!(ir.route_table.len(), 1);
+        assert_eq!(ir.route_table[0].method, "GET");
+        assert_eq!(ir.route_table[0].path, "/users");
+        assert_eq!(ir.route_table[0].handler_fn, "UserController.list");
     }
 }

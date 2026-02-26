@@ -24,7 +24,7 @@ This file tracks planned and completed implementation work across phases.
 | 9 | Lifecycle Pipeline | done | Static middleware/guard/pipe/interceptor chains |
 | 10 | IR & Codegen | in_progress | IR lowering + Cranelift-first native output |
 | 11 | Error Reporting | planned | Structured diagnostics + human/JSON output |
-| 12 | CLI | planned | `arwa` command implementations |
+| 12 | CLI | in_progress | `arwa` command implementations |
 | 13 | Scaffolding & Blueprint | planned | Template registry and project generation |
 | 14 | Standard Library | planned | `http.rw`, `result.rw`, `json.rw` |
 | 15 | Testing Infrastructure | planned | Unit/e2e harness and fixture programs |
