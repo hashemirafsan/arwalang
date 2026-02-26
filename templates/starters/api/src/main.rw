@@ -1,4 +1,5 @@
 module App {
   provide AppController
+  provide AppService
   control AppController
 }

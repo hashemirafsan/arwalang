@@ -940,36 +940,36 @@ Execution policy for this phase:
   - [x] Minimal project structure
 - [x] Create `templates/starters/api/`
   - [x] Module with controller
-  - [ ] Service with DI
-  - [ ] DTO examples
+  - [x] Service with DI
+  - [x] DTO examples
   - [x] Example routes
 - [x] Create `templates/starters/full/`
   - [x] API starter
   - [x] Auth module
   - [x] Database module
   - [x] Logger module
-  - [ ] Complete example app
+  - [x] Complete example app
 
 ### 13.3 Create Feature Templates
 - [x] Create `templates/features/http/`
-  - [ ] HTTP utilities
-  - [ ] Custom decorators
+  - [x] HTTP utilities
+  - [x] Custom decorators
 - [x] Create `templates/features/di/`
-  - [ ] Advanced DI examples
-  - [ ] Custom scopes
+  - [x] Advanced DI examples
+  - [x] Custom scopes
 - [x] Create `templates/features/logger/`
-  - [ ] Logger service
+  - [x] Logger service
   - [x] Logger module
-  - [ ] Usage examples
+  - [x] Usage examples
 - [x] Create `templates/features/auth-jwt/`
-  - [ ] JWT auth guard
+  - [x] JWT auth guard
   - [x] Auth module
-  - [ ] JWT utilities
-  - [ ] Login/register examples
+  - [x] JWT utilities
+  - [x] Login/register examples
 - [x] Create `templates/features/db-postgres/`
   - [x] Postgres connection
-  - [ ] Repository pattern
-  - [ ] Migration utilities
+  - [x] Repository pattern
+  - [x] Migration utilities
 
 ### 13.4 Create Template Registry
 - [x] Create `templates/registry.json`
@@ -982,48 +982,48 @@ Execution policy for this phase:
 - [x] Implement registry parser
 
 ### 13.5 Bundle Templates in Binary
-- [ ] Use `include_str!` or `include_bytes!` macros
-- [ ] Embed all template files in compiler binary
-- [ ] Implement template extraction at runtime
+- [x] Use `include_str!` or `include_bytes!` macros
+- [x] Embed all template files in compiler binary
+- [x] Implement template extraction at runtime
 
 ### 13.6 Template Tests
 - [x] Unit test: parse blueprint.json
 - [x] Unit test: validate blueprint schema
 - [x] Unit test: parse registry.json
-- [ ] Integration test: create project from minimal template
-- [ ] Integration test: create project from api template
-- [ ] Integration test: create project from full template
-- [ ] Integration test: add each feature to project
+- [x] Integration test: create project from minimal template
+- [x] Integration test: create project from api template
+- [x] Integration test: create project from full template
+- [x] Integration test: add each feature to project
 
 ---
 
 ## 14. Phase 14 - Standard Library
 
 ### 14.1 Implement `stdlib/http.rw`
-- [ ] Create `stdlib/http.rw`
-- [ ] Define `HttpError` class
-  - [ ] status: Int field
-  - [ ] message: String field
-  - [ ] Constructor
-- [ ] Define `RequestContext` struct
-  - [ ] method: String
-  - [ ] path: String
-  - [ ] headers: Map<String, String>
-  - [ ] body: String
-- [ ] Define `Response` struct
-  - [ ] status: Int
-  - [ ] headers: Map<String, String>
-  - [ ] body: String
-- [ ] Define `Guard` interface
-  - [ ] canActivate method signature
-- [ ] Define `Interceptor` interface
-  - [ ] intercept method signature
-- [ ] Define `Pipe` interface
-  - [ ] transform method signature
-- [ ] Define `PipeMetadata` struct
+- [x] Create `stdlib/http.rw`
+- [x] Define `HttpError` class
+  - [x] status: Int field
+  - [x] message: String field
+  - [x] Constructor
+- [x] Define `RequestContext` struct
+  - [x] method: String
+  - [x] path: String
+  - [x] headers: Map<String, String>
+  - [x] body: String
+- [x] Define `Response` struct
+  - [x] status: Int
+  - [x] headers: Map<String, String>
+  - [x] body: String
+- [x] Define `Guard` interface
+  - [x] canActivate method signature
+- [x] Define `Interceptor` interface
+  - [x] intercept method signature
+- [x] Define `Pipe` interface
+  - [x] transform method signature
+- [x] Define `PipeMetadata` struct
 
 ### 14.2 Implement `stdlib/result.rw`
-- [ ] Create `stdlib/result.rw`
+- [x] Create `stdlib/result.rw`
 - [ ] Define `Result<T, E>` enum (if not built-in)
   - [ ] Ok(T) variant
   - [ ] Err(E) variant
@@ -1039,13 +1039,13 @@ Execution policy for this phase:
 - [ ] Implement Option methods
 
 ### 14.3 Implement `stdlib/json.rw`
-- [ ] Create `stdlib/json.rw`
-- [ ] Define `Json` class with static methods
-  - [ ] encode<T>(value: T) -> String
-  - [ ] decode<T>(raw: String) -> Result<T, JsonError>
-- [ ] Define `JsonError` class
-  - [ ] message: String
-  - [ ] position: Int (optional)
+- [x] Create `stdlib/json.rw`
+- [x] Define `Json` class with static methods
+  - [x] encode<T>(value: T) -> String
+  - [x] decode<T>(raw: String) -> Result<T, JsonError>
+- [x] Define `JsonError` class
+  - [x] message: String
+  - [x] position: Int (optional)
 
 ### 14.4 Standard Library Integration
 - [ ] Make stdlib available to all ArwaLang programs

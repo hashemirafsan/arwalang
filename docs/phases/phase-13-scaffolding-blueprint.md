@@ -1,4 +1,4 @@
-# Phase 13 - Scaffolding & Blueprint (In Progress)
+# Phase 13 - Scaffolding & Blueprint
 
 ## Objective
 
@@ -30,11 +30,19 @@ Provide starter/feature template infrastructure and validated project blueprint 
 - Integrated template schema into CLI flows:
   - `arwa new` now copies from `templates/starters/<starter>/`
   - `arwa add` now validates features from registry and updates blueprint through schema helpers
+- Added template bundling/extraction in `src/cli/templates.rs`:
+  - compile-time template embedding via `include_str!`
+  - runtime extraction helper when `templates/` is missing in current project
+  - `arwa new` and `arwa add` now ensure embedded templates are available before operation
+- Added integration coverage for scaffold workflows:
+  - create project from minimal starter
+  - create project from api starter
+  - create project from full starter
+  - add all registry features into a project blueprint
 
 ## Current Gaps
 
 - Full starter content depth (API/full app examples) is still scaffold-level.
-- Template bundling into binary (`include_str!/include_bytes!`) is not implemented yet.
 - `arwa add` currently overlays template files without merge/conflict policy.
 
 ## Validation Performed
@@ -47,4 +55,4 @@ cargo clippy -- -D warnings
 
 ## Next Step
 
-Implement template bundling and extraction, then add end-to-end starter creation coverage for minimal/api/full templates.
+Move to Phase 14 and implement standard library files (`stdlib/http.rw`, `stdlib/result.rw`, `stdlib/json.rw`).

@@ -55,6 +55,7 @@ pub fn link_executable(object_file: &Path, output_binary: &Path) -> Result<(), C
 fn build_runtime_staticlib() -> Result<PathBuf, CodegenError> {
     let manifest = runtime_manifest_path();
     let status = Command::new("cargo")
+        .current_dir(PathBuf::from(env!("CARGO_MANIFEST_DIR")))
         .arg("build")
         .arg("--manifest-path")
         .arg(&manifest)

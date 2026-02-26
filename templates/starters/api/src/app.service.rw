@@ -1,0 +1,6 @@
+#[injectable]
+class AppService {
+  fn ping(res: Result<String, HttpError>): Result<String, HttpError> {
+    return res
+  }
+}

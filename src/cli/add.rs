@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use clap::Args;
 
-use super::templates::{read_blueprint, read_registry, write_blueprint};
+use super::templates::{ensure_templates_on_disk, read_blueprint, read_registry, write_blueprint};
 
 /// CLI options for `arwa add`.
 #[derive(Debug, Clone, Args)]
@@ -15,6 +15,8 @@ pub struct AddArgs {
 
 /// Adds a feature scaffold to the current Arwa project.
 pub fn execute_add(args: &AddArgs) -> Result<(), String> {
+    ensure_templates_on_disk(Path::new(".")).map_err(|err| format!("add: {err}"))?;
+
     let mut blueprint =
         read_blueprint(Path::new("arwa.blueprint.json")).map_err(|err| format!("add: {err}"))?;
     validate_feature_exists(&args.feature)?;
@@ -115,29 +117,32 @@ mod tests {
 
     use super::{execute_add, AddArgs};
 
-    #[test]
-    fn add_updates_blueprint_and_creates_feature_scaffold() {
-        let _guard = cwd_test_lock().lock().expect("acquire cwd lock");
-
+    fn temp_base(prefix: &str) -> std::path::PathBuf {
         let unique = format!(
-            "arwa-add-test-{}",
+            "{prefix}-{}",
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .expect("clock should be valid")
                 .as_nanos()
         );
-        let base = std::env::temp_dir().join(unique);
-        fs::create_dir_all(base.join("templates")).expect("create templates dir");
+        std::env::temp_dir().join(unique)
+    }
+
+    fn write_blueprint(path: &std::path::Path) {
         fs::write(
-            base.join("templates/registry.json"),
-            r#"{"features":[{"name":"logger","description":"x","files":[],"dependencies":[],"usage":[]}]}"#,
-        )
-        .expect("write registry");
-        fs::write(
-            base.join("arwa.blueprint.json"),
+            path,
             r#"{"name":"demo","version":"0.1.0","starter":"api","features":[]}"#,
         )
         .expect("write blueprint");
+    }
+
+    #[test]
+    fn add_updates_blueprint_and_creates_feature_scaffold() {
+        let _guard = cwd_test_lock().lock().expect("acquire cwd lock");
+
+        let base = temp_base("arwa-add-test");
+        fs::create_dir_all(&base).expect("create base dir");
+        write_blueprint(&base.join("arwa.blueprint.json"));
 
         let old_cwd = std::env::current_dir().expect("read cwd");
         std::env::set_current_dir(&base).expect("set cwd");
@@ -153,12 +158,40 @@ mod tests {
         assert!(blueprint.contains("logger"));
 
         std::env::set_current_dir(old_cwd).expect("restore cwd");
-        fs::remove_file(base.join("src/features/logger.rw")).expect("cleanup feature file");
-        fs::remove_dir(base.join("src/features")).expect("cleanup features dir");
-        fs::remove_dir(base.join("src")).expect("cleanup src dir");
-        fs::remove_file(base.join("arwa.blueprint.json")).expect("cleanup blueprint");
-        fs::remove_file(base.join("templates/registry.json")).expect("cleanup registry");
-        fs::remove_dir(base.join("templates")).expect("cleanup templates dir");
-        fs::remove_dir(base).expect("cleanup base");
+        fs::remove_dir_all(base).expect("cleanup base");
+    }
+
+    #[test]
+    fn add_can_apply_all_registry_features() {
+        let _guard = cwd_test_lock().lock().expect("acquire cwd lock");
+
+        let base = temp_base("arwa-add-all-features-test");
+        fs::create_dir_all(&base).expect("create base dir");
+        write_blueprint(&base.join("arwa.blueprint.json"));
+
+        let old_cwd = std::env::current_dir().expect("read cwd");
+        std::env::set_current_dir(&base).expect("set cwd");
+
+        for feature in ["http", "di", "logger", "auth-jwt", "db-postgres"] {
+            execute_add(&AddArgs {
+                feature: feature.to_string(),
+            })
+            .expect("add feature should succeed");
+        }
+
+        assert!(base.join("src/features/http.rw").exists());
+        assert!(base.join("src/features/di.rw").exists());
+        assert!(base.join("src/features/logger.rw").exists());
+        assert!(base.join("src/features/auth-jwt.rw").exists());
+        assert!(base.join("src/features/db-postgres.rw").exists());
+
+        let blueprint =
+            fs::read_to_string(base.join("arwa.blueprint.json")).expect("read blueprint");
+        for feature in ["http", "di", "logger", "auth-jwt", "db-postgres"] {
+            assert!(blueprint.contains(feature));
+        }
+
+        std::env::set_current_dir(old_cwd).expect("restore cwd");
+        fs::remove_dir_all(base).expect("cleanup base");
     }
 }

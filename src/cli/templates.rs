@@ -33,6 +33,125 @@ pub struct RegistryFeature {
     pub usage: Vec<String>,
 }
 
+const EMBEDDED_TEMPLATE_FILES: &[(&str, &str)] = &[
+    (
+        "templates/registry.json",
+        include_str!("../../templates/registry.json"),
+    ),
+    (
+        "templates/starters/minimal/src/main.rw",
+        include_str!("../../templates/starters/minimal/src/main.rw"),
+    ),
+    (
+        "templates/starters/api/src/main.rw",
+        include_str!("../../templates/starters/api/src/main.rw"),
+    ),
+    (
+        "templates/starters/api/src/app.controller.rw",
+        include_str!("../../templates/starters/api/src/app.controller.rw"),
+    ),
+    (
+        "templates/starters/api/src/app.service.rw",
+        include_str!("../../templates/starters/api/src/app.service.rw"),
+    ),
+    (
+        "templates/starters/api/src/create-app.dto.rw",
+        include_str!("../../templates/starters/api/src/create-app.dto.rw"),
+    ),
+    (
+        "templates/starters/full/src/main.rw",
+        include_str!("../../templates/starters/full/src/main.rw"),
+    ),
+    (
+        "templates/starters/full/src/app.controller.rw",
+        include_str!("../../templates/starters/full/src/app.controller.rw"),
+    ),
+    (
+        "templates/starters/full/src/auth.service.rw",
+        include_str!("../../templates/starters/full/src/auth.service.rw"),
+    ),
+    (
+        "templates/starters/full/src/database.service.rw",
+        include_str!("../../templates/starters/full/src/database.service.rw"),
+    ),
+    (
+        "templates/starters/full/src/logger.service.rw",
+        include_str!("../../templates/starters/full/src/logger.service.rw"),
+    ),
+    (
+        "templates/starters/full/src/auth.guard.rw",
+        include_str!("../../templates/starters/full/src/auth.guard.rw"),
+    ),
+    (
+        "templates/starters/full/src/create-user.dto.rw",
+        include_str!("../../templates/starters/full/src/create-user.dto.rw"),
+    ),
+    (
+        "templates/features/http/src/features/http.rw",
+        include_str!("../../templates/features/http/src/features/http.rw"),
+    ),
+    (
+        "templates/features/http/src/features/http.utils.rw",
+        include_str!("../../templates/features/http/src/features/http.utils.rw"),
+    ),
+    (
+        "templates/features/http/src/features/http.decorators.rw",
+        include_str!("../../templates/features/http/src/features/http.decorators.rw"),
+    ),
+    (
+        "templates/features/di/src/features/di.rw",
+        include_str!("../../templates/features/di/src/features/di.rw"),
+    ),
+    (
+        "templates/features/di/src/features/di.advanced.rw",
+        include_str!("../../templates/features/di/src/features/di.advanced.rw"),
+    ),
+    (
+        "templates/features/di/src/features/di.scopes.rw",
+        include_str!("../../templates/features/di/src/features/di.scopes.rw"),
+    ),
+    (
+        "templates/features/logger/src/features/logger.rw",
+        include_str!("../../templates/features/logger/src/features/logger.rw"),
+    ),
+    (
+        "templates/features/logger/src/features/logger.service.rw",
+        include_str!("../../templates/features/logger/src/features/logger.service.rw"),
+    ),
+    (
+        "templates/features/logger/src/features/logger.usage.rw",
+        include_str!("../../templates/features/logger/src/features/logger.usage.rw"),
+    ),
+    (
+        "templates/features/auth-jwt/src/features/auth-jwt.rw",
+        include_str!("../../templates/features/auth-jwt/src/features/auth-jwt.rw"),
+    ),
+    (
+        "templates/features/auth-jwt/src/features/jwt.guard.rw",
+        include_str!("../../templates/features/auth-jwt/src/features/jwt.guard.rw"),
+    ),
+    (
+        "templates/features/auth-jwt/src/features/jwt.utils.rw",
+        include_str!("../../templates/features/auth-jwt/src/features/jwt.utils.rw"),
+    ),
+    (
+        "templates/features/auth-jwt/src/features/auth.example.rw",
+        include_str!("../../templates/features/auth-jwt/src/features/auth.example.rw"),
+    ),
+    (
+        "templates/features/db-postgres/src/features/db-postgres.rw",
+        include_str!("../../templates/features/db-postgres/src/features/db-postgres.rw"),
+    ),
+    (
+        "templates/features/db-postgres/src/features/db.repository.rw",
+        include_str!("../../templates/features/db-postgres/src/features/db.repository.rw"),
+    ),
+    (
+        "templates/features/db-postgres/src/features/db.migrations.rw",
+        include_str!("../../templates/features/db-postgres/src/features/db.migrations.rw"),
+    ),
+];
+
 /// Reads and validates blueprint file from disk.
 pub fn read_blueprint(path: &Path) -> Result<Blueprint, String> {
     let raw = fs::read_to_string(path)
@@ -89,6 +208,31 @@ pub fn validate_registry(registry: &TemplateRegistry) -> Result<(), String> {
                 feature.name
             ));
         }
+    }
+    Ok(())
+}
+
+/// Ensures template tree exists on disk by extracting embedded templates when missing.
+pub fn ensure_templates_on_disk(project_root: &Path) -> Result<(), String> {
+    let registry = project_root.join("templates/registry.json");
+    if registry.exists() {
+        return Ok(());
+    }
+
+    extract_embedded_templates(project_root)
+}
+
+/// Extracts all embedded templates into a target project root.
+pub fn extract_embedded_templates(project_root: &Path) -> Result<(), String> {
+    for (relative, contents) in EMBEDDED_TEMPLATE_FILES {
+        let out = project_root.join(relative);
+        if let Some(parent) = out.parent() {
+            fs::create_dir_all(parent).map_err(|err| {
+                format!("template: failed creating '{}': {err}", parent.display())
+            })?;
+        }
+        fs::write(&out, contents)
+            .map_err(|err| format!("template: failed writing '{}': {err}", out.display()))?;
     }
     Ok(())
 }

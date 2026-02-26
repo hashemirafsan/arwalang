@@ -1,0 +1,6 @@
+#[injectable]
+class AuthGuard {
+  fn allow(res: Result<Bool, HttpError>): Result<Bool, HttpError> {
+    return res
+  }
+}

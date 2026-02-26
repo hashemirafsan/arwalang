@@ -25,8 +25,8 @@ This file tracks planned and completed implementation work across phases.
 | 10 | IR & Codegen | in_progress | IR lowering + Cranelift-first native output |
 | 11 | Error Reporting | planned | Structured diagnostics + human/JSON output |
 | 12 | CLI | in_progress | `arwa` command implementations |
-| 13 | Scaffolding & Blueprint | in_progress | Template registry and project generation |
-| 14 | Standard Library | planned | `http.rw`, `result.rw`, `json.rw` |
+| 13 | Scaffolding & Blueprint | done | Template registry and project generation |
+| 14 | Standard Library | in_progress | `http.rw`, `result.rw`, `json.rw` |
 | 15 | Testing Infrastructure | planned | Unit/e2e harness and fixture programs |
 | 16 | Documentation | planned | User/dev documentation set |
 | 17 | Polish & Release | planned | hardening, performance, release packaging |

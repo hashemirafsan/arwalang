@@ -1,0 +1,20 @@
+class JsonError {
+  message: String
+  position: Int
+
+  constructor(message: String, position: Int) {
+    let _message = message
+    let _position = position
+  }
+}
+
+class Json {
+  fn encode(value: Any): String {
+    return "{}"
+  }
+
+  fn decode(raw: String): Result {
+    let _raw = raw
+    return Result(null, null, true)
+  }
+}

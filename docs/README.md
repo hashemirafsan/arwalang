@@ -23,7 +23,8 @@ This directory contains phase-oriented implementation documentation for the Arwa
 - `docs/phases/phase-09-lifecycle-pipeline.md`: implementation record for Phase 9.
 - `docs/phases/phase-10-ir-codegen.md`: implementation record for Phase 10 (in progress).
 - `docs/phases/phase-12-cli.md`: implementation record for Phase 12 (in progress).
-- `docs/phases/phase-13-scaffolding-blueprint.md`: implementation record for Phase 13 (in progress).
+- `docs/phases/phase-13-scaffolding-blueprint.md`: implementation record for Phase 13.
+- `docs/phases/phase-14-stdlib.md`: implementation record for Phase 14 (in progress).
 - `docs/phases/template.md`: template to document upcoming phases.
 
 ## Update Policy

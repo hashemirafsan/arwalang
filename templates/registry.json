@@ -4,7 +4,9 @@
       "name": "http",
       "description": "HTTP helper module and baseline server wiring examples",
       "files": [
-        "src/features/http.rw"
+        "src/features/http.rw",
+        "src/features/http.utils.rw",
+        "src/features/http.decorators.rw"
       ],
       "dependencies": [],
       "usage": [
@@ -15,7 +17,9 @@
       "name": "di",
       "description": "Dependency injection helper examples",
       "files": [
-        "src/features/di.rw"
+        "src/features/di.rw",
+        "src/features/di.advanced.rw",
+        "src/features/di.scopes.rw"
       ],
       "dependencies": [],
       "usage": [
@@ -26,7 +30,9 @@
       "name": "logger",
       "description": "Logging feature scaffold",
       "files": [
-        "src/features/logger.rw"
+        "src/features/logger.rw",
+        "src/features/logger.service.rw",
+        "src/features/logger.usage.rw"
       ],
       "dependencies": [
         "di"
@@ -39,7 +45,10 @@
       "name": "auth-jwt",
       "description": "JWT authentication feature scaffold",
       "files": [
-        "src/features/auth-jwt.rw"
+        "src/features/auth-jwt.rw",
+        "src/features/jwt.guard.rw",
+        "src/features/jwt.utils.rw",
+        "src/features/auth.example.rw"
       ],
       "dependencies": [
         "http",
@@ -53,7 +62,9 @@
       "name": "db-postgres",
       "description": "Postgres integration scaffold",
       "files": [
-        "src/features/db-postgres.rw"
+        "src/features/db-postgres.rw",
+        "src/features/db.repository.rw",
+        "src/features/db.migrations.rw"
       ],
       "dependencies": [
         "di"

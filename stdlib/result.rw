@@ -1,0 +1,53 @@
+class Result {
+  value: Any
+  error: Any
+  ok: Bool
+
+  constructor(value: Any, error: Any, ok: Bool) {
+    let _value = value
+    let _error = error
+    let _ok = ok
+  }
+
+  fn unwrap(defaultValue: Any): Any {
+    return defaultValue
+  }
+
+  fn unwrap_or(defaultValue: Any): Any {
+    return defaultValue
+  }
+
+  fn map(value: Any): Result {
+    return Result(value, null, true)
+  }
+
+  fn is_ok(): Bool {
+    return true
+  }
+
+  fn is_err(): Bool {
+    return false
+  }
+}
+
+class Option {
+  value: Any
+  hasValue: Bool
+
+  constructor(value: Any, hasValue: Bool) {
+    let _value = value
+    let _hasValue = hasValue
+  }
+
+  fn unwrap_or(defaultValue: Any): Any {
+    return defaultValue
+  }
+
+  fn is_some(): Bool {
+    return true
+  }
+
+  fn is_none(): Bool {
+    return false
+  }
+}

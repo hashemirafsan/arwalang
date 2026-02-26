@@ -1,0 +1,4 @@
+struct CreateUserDto {
+  email: String
+  password: String
+}

@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use clap::Args;
 
-use super::templates::{write_blueprint, Blueprint};
+use super::templates::{ensure_templates_on_disk, write_blueprint, Blueprint};
 
 /// CLI options for `arwa new`.
 #[derive(Debug, Clone, Args)]
@@ -20,6 +20,7 @@ pub struct NewArgs {
 /// Creates a new ArwaLang project from bundled starter template.
 pub fn execute_new(args: &NewArgs) -> Result<PathBuf, String> {
     validate_project_name(&args.name)?;
+    ensure_templates_on_disk(Path::new(".")).map_err(|err| format!("new: {err}"))?;
 
     let project_dir = PathBuf::from(&args.name);
     if project_dir.exists() {
@@ -119,31 +120,23 @@ mod tests {
 
     use super::{execute_new, NewArgs};
 
-    #[test]
-    fn new_creates_project_structure_and_blueprint() {
-        let _guard = cwd_test_lock().lock().expect("acquire cwd lock");
-
+    fn temp_base(prefix: &str) -> std::path::PathBuf {
         let unique = format!(
-            "arwa-new-test-{}",
+            "{prefix}-{}",
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .expect("clock should be valid")
                 .as_nanos()
         );
-        let base = std::env::temp_dir().join(unique);
+        std::env::temp_dir().join(unique)
+    }
+
+    #[test]
+    fn new_creates_project_structure_and_blueprint() {
+        let _guard = cwd_test_lock().lock().expect("acquire cwd lock");
+
+        let base = temp_base("arwa-new-test");
         fs::create_dir_all(&base).expect("create base dir");
-        fs::create_dir_all(base.join("templates/starters/api/src"))
-            .expect("create starter template dir");
-        fs::write(
-            base.join("templates/starters/api/src/main.rw"),
-            "module App {\n  provide AppController\n  control AppController\n}\n",
-        )
-        .expect("write starter main");
-        fs::write(
-            base.join("templates/starters/api/src/app.controller.rw"),
-            "#[injectable]\nclass AppController {\n}\n",
-        )
-        .expect("write starter controller");
         let old_cwd = std::env::current_dir().expect("read cwd");
         std::env::set_current_dir(&base).expect("set cwd");
 
@@ -161,19 +154,52 @@ mod tests {
         assert!(project_path.join("arwa.blueprint.json").exists());
 
         std::env::set_current_dir(old_cwd).expect("restore cwd");
-        fs::remove_file(project_path.join("src/main.rw")).expect("cleanup main source");
-        fs::remove_file(project_path.join("src/app.controller.rw")).expect("cleanup controller");
-        fs::remove_file(project_path.join("arwa.blueprint.json")).expect("cleanup blueprint");
-        fs::remove_dir(project_path.join("src")).expect("cleanup src");
-        fs::remove_dir(project_path).expect("cleanup project dir");
-        fs::remove_file(base.join("templates/starters/api/src/main.rw"))
-            .expect("cleanup starter main");
-        fs::remove_file(base.join("templates/starters/api/src/app.controller.rw"))
-            .expect("cleanup starter controller");
-        fs::remove_dir(base.join("templates/starters/api/src")).expect("cleanup starter src");
-        fs::remove_dir(base.join("templates/starters/api")).expect("cleanup starter api");
-        fs::remove_dir(base.join("templates/starters")).expect("cleanup starters");
-        fs::remove_dir(base.join("templates")).expect("cleanup templates");
-        fs::remove_dir(base).expect("cleanup base");
+        fs::remove_dir_all(base).expect("cleanup base");
+    }
+
+    #[test]
+    fn new_creates_minimal_starter_project() {
+        let _guard = cwd_test_lock().lock().expect("acquire cwd lock");
+
+        let base = temp_base("arwa-new-minimal-test");
+        fs::create_dir_all(&base).expect("create base dir");
+        let old_cwd = std::env::current_dir().expect("read cwd");
+        std::env::set_current_dir(&base).expect("set cwd");
+
+        let created = execute_new(&NewArgs {
+            name: "sample_minimal".to_string(),
+            starter: "minimal".to_string(),
+        })
+        .expect("new minimal should succeed");
+
+        assert!(created.join("src/main.rw").exists());
+
+        std::env::set_current_dir(old_cwd).expect("restore cwd");
+        fs::remove_dir_all(base).expect("cleanup base");
+    }
+
+    #[test]
+    fn new_creates_full_starter_project() {
+        let _guard = cwd_test_lock().lock().expect("acquire cwd lock");
+
+        let base = temp_base("arwa-new-full-test");
+        fs::create_dir_all(&base).expect("create base dir");
+        let old_cwd = std::env::current_dir().expect("read cwd");
+        std::env::set_current_dir(&base).expect("set cwd");
+
+        let created = execute_new(&NewArgs {
+            name: "sample_full".to_string(),
+            starter: "full".to_string(),
+        })
+        .expect("new full should succeed");
+
+        assert!(created.join("src/main.rw").exists());
+        assert!(created.join("src/app.controller.rw").exists());
+        assert!(created.join("src/auth.service.rw").exists());
+        assert!(created.join("src/database.service.rw").exists());
+        assert!(created.join("src/logger.service.rw").exists());
+
+        std::env::set_current_dir(old_cwd).expect("restore cwd");
+        fs::remove_dir_all(base).expect("cleanup base");
     }
 }

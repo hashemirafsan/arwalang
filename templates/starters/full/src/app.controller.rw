@@ -11,4 +11,9 @@ class AppController {
   fn status(res: Result<String, HttpError>): Result<String, HttpError> {
     return res
   }
+
+  #[post("/users")]
+  fn createUser(res: Result<String, HttpError>, #[body] dto: CreateUserDto): Result<String, HttpError> {
+    return res
+  }
 }

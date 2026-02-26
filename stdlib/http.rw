@@ -1,0 +1,39 @@
+class HttpError {
+  status: Int
+  message: String
+
+  constructor(status: Int, message: String) {
+    let _status = status
+    let _message = message
+  }
+}
+
+struct RequestContext {
+  method: String
+  path: String
+  headers: Map<String, String>
+  body: String
+}
+
+struct Response {
+  status: Int
+  headers: Map<String, String>
+  body: String
+}
+
+struct PipeMetadata {
+  source: String
+  key: String
+}
+
+interface Guard {
+  fn canActivate(ctx: RequestContext): Result<Bool, HttpError>
+}
+
+interface Interceptor {
+  fn intercept(ctx: RequestContext, next: () -> Response): Result<Response, HttpError>
+}
+
+interface Pipe {
+  fn transform(value: Any, metadata: PipeMetadata): Result<Any, HttpError>
+}

@@ -1,8 +1,15 @@
 #[injectable]
 #[controller("/")]
 class AppController {
+  constructor(service: AppService) {}
+
   #[get("/")]
   fn hello(res: Result<String, HttpError>): Result<String, HttpError> {
+    return res
+  }
+
+  #[post("/items")]
+  fn create(res: Result<String, HttpError>, #[body] dto: CreateAppDto): Result<String, HttpError> {
     return res
   }
 }
