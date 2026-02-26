@@ -43,63 +43,63 @@ This document breaks down the ArwaLang compiler implementation into granular tas
 ## 1. Phase 1 - Lexer
 
 ### 1.1 Define Token Types
-- [ ] Create `src/lexer/mod.rs`
-- [ ] Create `src/lexer/token.rs`
-  - [ ] Define `Token` enum with all token types
-  - [ ] Implement keyword tokens (module, import, export, etc.)
-  - [ ] Implement literal tokens (IntLiteral, FloatLiteral, StringLiteral, BoolLiteral)
-  - [ ] Implement identifier token
-  - [ ] Implement decorator tokens (Hash, LBracket, RBracket)
-  - [ ] Implement delimiter tokens (braces, parens, angles, etc.)
-  - [ ] Implement operator tokens (arithmetic, comparison, logical)
-  - [ ] Implement special tokens (EOF, Newline)
-  - [ ] Add `Span` struct with position tracking (file, line, col)
-  - [ ] Implement Display trait for Token
+- [x] Create `src/lexer/mod.rs`
+- [x] Create `src/lexer/token.rs`
+  - [x] Define `Token` enum with all token types
+  - [x] Implement keyword tokens (module, import, export, etc.)
+  - [x] Implement literal tokens (IntLiteral, FloatLiteral, StringLiteral, BoolLiteral)
+  - [x] Implement identifier token
+  - [x] Implement decorator tokens (Hash, LBracket, RBracket)
+  - [x] Implement delimiter tokens (braces, parens, angles, etc.)
+  - [x] Implement operator tokens (arithmetic, comparison, logical)
+  - [x] Implement special tokens (EOF, Newline)
+  - [x] Add `Span` struct with position tracking (file, line, col)
+  - [x] Implement Display trait for Token
 
 ### 1.2 Implement Lexer Core
-- [ ] Create `src/lexer/lexer.rs`
-  - [ ] Define `Lexer` struct with source and position tracking
-  - [ ] Implement `new(source: String, file: PathBuf) -> Lexer`
-  - [ ] Implement `next_token() -> Result<Token, LexError>`
-  - [ ] Implement character peeking and advancing
-  - [ ] Track line and column numbers
+- [x] Create `src/lexer/lexer.rs`
+  - [x] Define `Lexer` struct with source and position tracking
+  - [x] Implement `new(source: String, file: PathBuf) -> Lexer`
+  - [x] Implement `next_token() -> Result<Token, LexError>`
+  - [x] Implement character peeking and advancing
+  - [x] Track line and column numbers
 
 ### 1.3 Implement Token Recognition
-- [ ] Implement whitespace skipping
-- [ ] Implement single-line comment handling (`//`)
-- [ ] Implement block comment handling (`/* */`)
-- [ ] Implement string literal lexing
-  - [ ] Handle double quotes
-  - [ ] Handle escape sequences (\n, \t, \\, \")
-  - [ ] Error on unterminated strings
-- [ ] Implement number literal lexing
-  - [ ] Integer literals (decimal only)
-  - [ ] Float literals (with decimal point)
-- [ ] Implement identifier and keyword lexing
-  - [ ] Distinguish keywords from identifiers
-- [ ] Implement operator lexing
-  - [ ] Handle multi-character operators (==, !=, <=, >=, &&, ||)
-  - [ ] Handle arrow operators (=>, ->)
+- [x] Implement whitespace skipping
+- [x] Implement single-line comment handling (`//`)
+- [x] Implement block comment handling (`/* */`)
+- [x] Implement string literal lexing
+  - [x] Handle double quotes
+  - [x] Handle escape sequences (\n, \t, \\, \")
+  - [x] Error on unterminated strings
+- [x] Implement number literal lexing
+  - [x] Integer literals (decimal only)
+  - [x] Float literals (with decimal point)
+- [x] Implement identifier and keyword lexing
+  - [x] Distinguish keywords from identifiers
+- [x] Implement operator lexing
+  - [x] Handle multi-character operators (==, !=, <=, >=, &&, ||)
+  - [x] Handle arrow operators (=>, ->)
 
 ### 1.4 Lexer Error Handling
-- [ ] Define `LexError` enum using thiserror
-  - [ ] UnterminatedString variant
-  - [ ] UnexpectedChar variant
-  - [ ] InvalidEscape variant
-- [ ] Include span information in all errors
-- [ ] Implement error recovery (continue after error)
+- [x] Define `LexError` enum using thiserror
+  - [x] UnterminatedString variant
+  - [x] UnexpectedChar variant
+  - [x] InvalidEscape variant
+- [x] Include span information in all errors
+- [x] Implement error recovery (continue after error)
 
 ### 1.5 Lexer Tests
-- [ ] Unit test: keyword recognition
-- [ ] Unit test: identifier recognition
-- [ ] Unit test: integer literals
-- [ ] Unit test: float literals
-- [ ] Unit test: string literals with escapes
-- [ ] Unit test: all operators
-- [ ] Unit test: comments (single-line and block)
-- [ ] Unit test: position tracking accuracy
-- [ ] Unit test: error cases (unterminated string, invalid char)
-- [ ] Unit test: decorator sequence `#[`
+- [x] Unit test: keyword recognition
+- [x] Unit test: identifier recognition
+- [x] Unit test: integer literals
+- [x] Unit test: float literals
+- [x] Unit test: string literals with escapes
+- [x] Unit test: all operators
+- [x] Unit test: comments (single-line and block)
+- [x] Unit test: position tracking accuracy
+- [x] Unit test: error cases (unterminated string, invalid char)
+- [x] Unit test: decorator sequence `#[`
 
 ---
 
