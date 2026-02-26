@@ -881,26 +881,26 @@ Execution policy for this phase:
   - [x] Stream output to stdout/stderr
 
 ### 12.6 Implement `arwa add` Command
-- [ ] Create `src/cli/add.rs`
-- [ ] Define command arguments (feature name)
-- [ ] Implement `run(args: AddArgs) -> Result<(), Error>`
-  - [ ] Read `arwa.blueprint.json`
-  - [ ] Validate feature exists in registry
-  - [ ] Copy feature files from templates
-  - [ ] Update `arwa.blueprint.json`
-  - [ ] Print instructions for using the feature
+- [x] Create `src/cli/add.rs`
+- [x] Define command arguments (feature name)
+- [x] Implement `run(args: AddArgs) -> Result<(), Error>`
+  - [x] Read `arwa.blueprint.json`
+  - [x] Validate feature exists in registry
+  - [x] Copy feature files from templates
+  - [x] Update `arwa.blueprint.json`
+  - [x] Print instructions for using the feature
 
 ### 12.7 Implement `arwa fmt` Command
-- [ ] Create `src/cli/fmt.rs`
-- [ ] Define command arguments (optional: check mode)
-- [ ] Implement `run(args: FmtArgs) -> Result<(), Error>`
-  - [ ] Find all `.rw` files
+- [x] Create `src/cli/fmt.rs`
+- [x] Define command arguments (optional: check mode)
+- [x] Implement `run(args: FmtArgs) -> Result<(), Error>`
+  - [x] Find all `.rw` files
   - [ ] Parse each file
-  - [ ] Reformat according to style rules
-    - [ ] 2-space indentation
-    - [ ] Consistent blank lines
-    - [ ] Sort imports
-  - [ ] Write back to file (or check mode)
+  - [x] Reformat according to style rules
+    - [x] 2-space indentation
+    - [x] Consistent blank lines
+    - [x] Sort imports
+  - [x] Write back to file (or check mode)
 
 ### 12.8 CLI Error Handling
 - [ ] Implement user-friendly error messages
@@ -916,8 +916,8 @@ Execution policy for this phase:
 - [x] Integration test: `arwa build` compiles minimal project
 - [x] Integration test: `arwa check` validates without codegen
 - [x] Integration test: `arwa run` executes binary
-- [ ] Integration test: `arwa add` adds feature
-- [ ] Integration test: `arwa fmt` formats files
+- [x] Integration test: `arwa add` adds feature
+- [x] Integration test: `arwa fmt` formats files
 - [x] Unit test: CLI argument parsing
 - [x] Unit test: error handling and exit codes
 

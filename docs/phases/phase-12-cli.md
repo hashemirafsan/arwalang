@@ -11,7 +11,8 @@ Implement `arwa` command entrypoints for build/check/run workflows.
   - `check`
   - `run`
   - implemented `new`
-  - placeholders for `add`, `fmt`
+  - implemented `add`
+  - implemented `fmt`
 - Implemented `arwa new` flow in `src/cli/new.rs`:
   - project name validation
   - starter validation (`api`, `minimal`)
@@ -31,6 +32,14 @@ Implement `arwa` command entrypoints for build/check/run workflows.
   - runs build
   - executes produced binary
   - forwards args to generated executable
+- Implemented `arwa add` flow in `src/cli/add.rs`:
+  - reads and updates `arwa.blueprint.json`
+  - validates features from registry + built-in v1 set
+  - copies template files when available (fallback scaffold when missing)
+- Implemented `arwa fmt` flow in `src/cli/fmt.rs`:
+  - recursively discovers `.rw` files
+  - supports `--check` mode
+  - applies baseline formatting (2-space indent, import sorting, trailing cleanup)
 - Added CLI tests:
   - command argument parsing tests
   - build integration-like test (minimal app -> executable artifact)
@@ -39,13 +48,16 @@ Implement `arwa` command entrypoints for build/check/run workflows.
   - build/check project-discovery tests from `src/` layouts
   - new command project-generation test
   - run forwarded-arg behavior test
+  - add command feature-application test
+  - fmt command format/check tests
 - Added CLI error typing + exit-code mapping:
   - compilation/runtime errors -> exit code `1`
   - usage/unsupported command errors -> exit code `2`
 
 ## Current Gaps
 
-- `add` and `fmt` are not implemented yet.
+- `fmt` currently uses lightweight line-based formatting (not AST-driven).
+- `add` template copy path is limited by currently bundled template coverage.
 
 ## Validation Performed
 
@@ -57,4 +69,4 @@ cargo test
 
 ## Next Step
 
-Implement `add` and `fmt` command workflows with template/formatting integration tests.
+Harden `add`/`fmt` behaviors with richer template bundles and stricter formatting semantics.

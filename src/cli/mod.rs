@@ -12,8 +12,10 @@ use std::sync::{Mutex, OnceLock};
 
 use clap::{Parser, Subcommand};
 
+use self::add::{execute_add, AddArgs};
 use self::build::{execute_build, BuildArgs};
 use self::check::{execute_check, CheckArgs};
+use self::fmt::{execute_fmt, FmtArgs};
 use self::new::{execute_new, NewArgs};
 use self::run::{execute_run, RunArgs};
 
@@ -30,8 +32,8 @@ enum Commands {
     Check(CheckArgs),
     Run(RunArgs),
     New(NewArgs),
-    Add,
-    Fmt,
+    Add(AddArgs),
+    Fmt(FmtArgs),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -39,7 +41,6 @@ pub enum CliError {
     Usage(String),
     Compilation(String),
     Runtime(String),
-    Unsupported(String),
 }
 
 impl CliError {
@@ -48,7 +49,6 @@ impl CliError {
             Self::Usage(_) => 2,
             Self::Compilation(_) => 1,
             Self::Runtime(_) => 1,
-            Self::Unsupported(_) => 2,
         }
     }
 }
@@ -56,10 +56,7 @@ impl CliError {
 impl Display for CliError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Usage(msg)
-            | Self::Compilation(msg)
-            | Self::Runtime(msg)
-            | Self::Unsupported(msg) => write!(f, "{msg}"),
+            Self::Usage(msg) | Self::Compilation(msg) | Self::Runtime(msg) => write!(f, "{msg}"),
         }
     }
 }
@@ -90,12 +87,20 @@ pub fn run() -> Result<(), CliError> {
             println!("new: created project {}", created.display());
             Ok(())
         }
-        Some(Commands::Add) => Err(CliError::Unsupported(
-            "add: not implemented yet".to_string(),
-        )),
-        Some(Commands::Fmt) => Err(CliError::Unsupported(
-            "fmt: not implemented yet".to_string(),
-        )),
+        Some(Commands::Add(args)) => {
+            execute_add(&args).map_err(CliError::Runtime)?;
+            println!("add: feature '{}' applied", args.feature);
+            Ok(())
+        }
+        Some(Commands::Fmt(args)) => {
+            let changed = execute_fmt(&args).map_err(CliError::Runtime)?;
+            if args.check {
+                println!("fmt: all files are properly formatted");
+            } else {
+                println!("fmt: formatted {changed} file(s)");
+            }
+            Ok(())
+        }
         None => Err(CliError::Usage(
             "usage: arwa <build|check|run|new|add|fmt>".to_string(),
         )),
@@ -141,6 +146,17 @@ mod tests {
         assert_eq!(CliError::Usage("x".to_string()).exit_code(), 2);
         assert_eq!(CliError::Compilation("x".to_string()).exit_code(), 1);
         assert_eq!(CliError::Runtime("x".to_string()).exit_code(), 1);
-        assert_eq!(CliError::Unsupported("x".to_string()).exit_code(), 2);
+    }
+
+    #[test]
+    fn parses_add_command() {
+        let cli = Cli::try_parse_from(["arwa", "add", "logger"]).expect("parse add");
+        assert!(matches!(cli.command, Some(Commands::Add(_))));
+    }
+
+    #[test]
+    fn parses_fmt_command() {
+        let cli = Cli::try_parse_from(["arwa", "fmt", "--check"]).expect("parse fmt");
+        assert!(matches!(cli.command, Some(Commands::Fmt(_))));
     }
 }
