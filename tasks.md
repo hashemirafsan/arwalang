@@ -421,72 +421,72 @@ This document breaks down the ArwaLang compiler implementation into granular tas
 ## 6. Phase 6 - DI Graph Builder & Validator
 
 ### 6.1 Implement DI Graph Structure
-- [ ] Create `src/di/mod.rs`
-- [ ] Create `src/di/graph.rs`
-- [ ] Define `DiGraph` struct
-  - [ ] Nodes: providers (class name, scope, dependencies)
-  - [ ] Edges: dependency relationships
-- [ ] Define `Provider` struct (name, scope, dependencies, span)
-- [ ] Define `Scope` enum (Singleton, Request, Transient)
-- [ ] Implement `add_provider(provider: Provider)`
-- [ ] Implement `add_dependency(from: String, to: String)`
+- [x] Create `src/di/mod.rs`
+- [x] Create `src/di/graph.rs`
+- [x] Define `DiGraph` struct
+  - [x] Nodes: providers (class name, scope, dependencies)
+  - [x] Edges: dependency relationships
+- [x] Define `Provider` struct (name, scope, dependencies, span)
+- [x] Define `Scope` enum (Singleton, Request, Transient)
+- [x] Implement `add_provider(provider: Provider)`
+- [x] Implement `add_dependency(from: String, to: String)`
 
 ### 6.2 Build DI Graph from AST
-- [ ] Implement `DiGraphBuilder` struct
-- [ ] Implement `build(ast: &SourceFile) -> Result<DiGraph, Vec<DiError>>`
-- [ ] Collect all `#[injectable]` classes
-- [ ] For each injectable class:
-  - [ ] Extract constructor parameters as dependencies
-  - [ ] Determine scope from annotation
-  - [ ] Add as provider node
-- [ ] Process module `provide` declarations
-  - [ ] Handle simple bindings (provide X)
-  - [ ] Handle aliased bindings (provide Interface => Impl)
-- [ ] Build dependency edges
+- [x] Implement `DiGraphBuilder` struct
+- [x] Implement `build(ast: &SourceFile) -> Result<DiGraph, Vec<DiError>>`
+- [x] Collect all `#[injectable]` classes
+- [x] For each injectable class:
+  - [x] Extract constructor parameters as dependencies
+  - [x] Determine scope from annotation
+  - [x] Add as provider node
+- [x] Process module `provide` declarations
+  - [x] Handle simple bindings (provide X)
+  - [x] Handle aliased bindings (provide Interface => Impl)
+- [x] Build dependency edges
 
 ### 6.3 Validate DI Graph
-- [ ] Implement `validate_di_graph(graph: &DiGraph) -> Result<(), Vec<DiError>>`
-- [ ] Check for missing providers
-  - [ ] For each dependency, ensure provider exists in scope
-- [ ] Check for circular dependencies
-  - [ ] Implement cycle detection algorithm (DFS with visited set)
-  - [ ] Report full cycle path in error
-- [ ] Check for duplicate providers
-  - [ ] Detect multiple providers for same token in same module
-- [ ] Validate scope compatibility
-  - [ ] singleton can only inject singleton
-  - [ ] request can inject singleton and request
-  - [ ] transient can inject all scopes
-  - [ ] Error on scope violations
+- [x] Implement `validate_di_graph(graph: &DiGraph) -> Result<(), Vec<DiError>>`
+- [x] Check for missing providers
+  - [x] For each dependency, ensure provider exists in scope
+- [x] Check for circular dependencies
+  - [x] Implement cycle detection algorithm (DFS with visited set)
+  - [x] Report full cycle path in error
+- [x] Check for duplicate providers
+  - [x] Detect multiple providers for same token in same module
+- [x] Validate scope compatibility
+  - [x] singleton can only inject singleton
+  - [x] request can inject singleton and request
+  - [x] transient can inject all scopes
+  - [x] Error on scope violations
 
 ### 6.4 Validate Module Provider Rules
-- [ ] Check provider classes are marked `#[injectable]`
-- [ ] Check exported symbols are provided in same module
-- [ ] Validate interface implementations for aliased bindings
+- [x] Check provider classes are marked `#[injectable]`
+- [x] Check exported symbols are provided in same module
+- [x] Validate interface implementations for aliased bindings
 
 ### 6.5 DI Graph Error Handling
-- [ ] Define `DiError` enum using thiserror
-  - [ ] MissingProvider variant (DI001)
-  - [ ] CircularDependency variant (DI002)
-  - [ ] DuplicateProvider variant (DI003)
-  - [ ] ScopeMismatch variant (DI004)
-  - [ ] NotInjectable variant (DI005)
-  - [ ] ExportWithoutProvider variant (DI006)
-- [ ] Include span information in all errors
-- [ ] Collect all DI errors
+- [x] Define `DiError` enum using thiserror
+  - [x] MissingProvider variant (DI001)
+  - [x] CircularDependency variant (DI002)
+  - [x] DuplicateProvider variant (DI003)
+  - [x] ScopeMismatch variant (DI004)
+  - [x] NotInjectable variant (DI005)
+  - [x] ExportWithoutProvider variant (DI006)
+- [x] Include span information in all errors
+- [x] Collect all DI errors
 
 ### 6.6 DI Graph Tests
-- [ ] Unit test: build simple DI graph
-- [ ] Unit test: detect missing provider
-- [ ] Unit test: detect circular dependency (A→B→A)
-- [ ] Unit test: detect longer cycles (A→B→C→A)
-- [ ] Unit test: detect duplicate provider
-- [ ] Unit test: validate singleton scope restrictions
-- [ ] Unit test: validate request scope can inject singleton
-- [ ] Unit test: validate transient scope permissions
-- [ ] Unit test: error on non-injectable class
-- [ ] Unit test: error on export without provider
-- [ ] Unit test: aliased bindings work correctly
+- [x] Unit test: build simple DI graph
+- [x] Unit test: detect missing provider
+- [x] Unit test: detect circular dependency (A→B→A)
+- [x] Unit test: detect longer cycles (A→B→C→A)
+- [x] Unit test: detect duplicate provider
+- [x] Unit test: validate singleton scope restrictions
+- [x] Unit test: validate request scope can inject singleton
+- [x] Unit test: validate transient scope permissions
+- [x] Unit test: error on non-injectable class
+- [x] Unit test: error on export without provider
+- [x] Unit test: aliased bindings work correctly
 
 ---
 
