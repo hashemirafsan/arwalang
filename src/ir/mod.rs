@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use serde::Serialize;
 use thiserror::Error;
 
 use crate::di::graph::DiGraphBuilder;
@@ -76,14 +77,14 @@ pub struct IrStruct {
 }
 
 /// Static DI registry IR entry.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct DiRegistryEntry {
     pub token: String,
     pub factory_fn: String,
 }
 
 /// Static route-table IR entry.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct RouteRegistryEntry {
     pub method: String,
     pub path: String,
@@ -91,7 +92,7 @@ pub struct RouteRegistryEntry {
 }
 
 /// Static lifecycle pipeline IR entry.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct PipelineRegistryEntry {
     pub handler_fn: String,
     pub guards: Vec<String>,

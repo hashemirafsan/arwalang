@@ -39,9 +39,15 @@ Define compiler IR and start lowering validated AST into IR, then wire a Craneli
   - static route/DI/pipeline table reader structures
   - minimal request dispatch facade
   - runtime unit tests for route resolution, DI lookup, and dispatch behavior
+  - runtime staticlib export for executable entry (`arwa_runtime_start`)
+  - linked payload readers for compiler-emitted JSON table blobs
 - Added linker utilities in `src/codegen/linker.rs`:
   - write object output into dist paths
-  - invoke system linker (`cc`) for object -> executable step
+  - build runtime static library via `cargo build --manifest-path runtime/Cargo.toml --release`
+  - invoke system linker (`cc`) for object + runtime staticlib -> executable step
+- Extended Cranelift metadata emission in `src/codegen/cranelift.rs`:
+  - exports table count symbols
+  - exports JSON payload symbols + payload-length symbols for route/DI/lifecycle tables
 - Added codegen orchestration helpers in `src/codegen/mod.rs`:
   - `compile_to_object` (IR -> Cranelift object -> `dist/<name>.o`)
   - `compile_to_executable` (object -> linked `dist/<name>`)
@@ -50,7 +56,7 @@ Define compiler IR and start lowering validated AST into IR, then wire a Craneli
 ## Current Gaps
 
 - No full control-flow lowering yet (branching/basic-block graph still minimal).
-- Runtime linking currently uses a temporary bootstrap entrypoint and does not yet bind to full runtime crate startup.
+- Runtime startup currently loads linked table metadata but does not yet execute an HTTP server lifecycle.
 - `call` instruction lowering is currently placeholder-only.
 - Cross-platform linker behavior is not finalized.
 - Runtime crate currently provides dispatch/table plumbing only (no TCP listener or HTTP parser yet).

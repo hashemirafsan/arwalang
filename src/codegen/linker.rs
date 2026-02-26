@@ -27,19 +27,11 @@ pub fn write_object_file(
 
 /// Links one object file into executable using system C toolchain.
 pub fn link_executable(object_file: &Path, output_binary: &Path) -> Result<(), CodegenError> {
-    let bootstrap_source = output_binary.with_extension("bootstrap.c");
-    fs::write(&bootstrap_source, "int main(void) { return 0; }\n").map_err(|err| {
-        CodegenError::Backend {
-            message: format!(
-                "failed to write bootstrap source '{}': {err}",
-                bootstrap_source.display()
-            ),
-        }
-    })?;
+    let runtime_lib = build_runtime_staticlib()?;
 
     let status = Command::new("cc")
         .arg(object_file)
-        .arg(&bootstrap_source)
+        .arg(&runtime_lib)
         .arg("-o")
         .arg(output_binary)
         .status()
@@ -48,18 +40,65 @@ pub fn link_executable(object_file: &Path, output_binary: &Path) -> Result<(), C
         })?;
 
     if !status.success() {
-        let _ = fs::remove_file(&bootstrap_source);
         return Err(CodegenError::Backend {
             message: format!(
-                "linker exited with status {status} for output '{}'",
-                output_binary.display()
+                "linker exited with status {status} for output '{}' using runtime '{}'",
+                output_binary.display(),
+                runtime_lib.display()
             ),
         });
     }
 
-    let _ = fs::remove_file(&bootstrap_source);
-
     Ok(())
+}
+
+fn build_runtime_staticlib() -> Result<PathBuf, CodegenError> {
+    let manifest = runtime_manifest_path();
+    let status = Command::new("cargo")
+        .arg("build")
+        .arg("--manifest-path")
+        .arg(&manifest)
+        .arg("--release")
+        .status()
+        .map_err(|err| CodegenError::Backend {
+            message: format!(
+                "failed to build runtime crate from '{}': {err}",
+                manifest.display()
+            ),
+        })?;
+
+    if !status.success() {
+        return Err(CodegenError::Backend {
+            message: format!("runtime build failed with status {status}"),
+        });
+    }
+
+    let runtime_lib = runtime_staticlib_path();
+    if !runtime_lib.exists() {
+        return Err(CodegenError::Backend {
+            message: format!(
+                "runtime static library missing after build: '{}'",
+                runtime_lib.display()
+            ),
+        });
+    }
+
+    Ok(runtime_lib)
+}
+
+fn runtime_manifest_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("runtime/Cargo.toml")
+}
+
+fn runtime_staticlib_path() -> PathBuf {
+    let file_name = if cfg!(target_os = "windows") {
+        "arwa_runtime.lib"
+    } else {
+        "libarwa_runtime.a"
+    };
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("runtime/target/release")
+        .join(file_name)
 }
 
 #[cfg(test)]

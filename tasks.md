@@ -737,9 +737,9 @@ Execution policy for this phase:
   - [ ] HTTP server (TCP listener, HTTP/1.1 parser)
   - [x] Route dispatcher (reads static route table)
   - [x] DI container (reads static DI registry)
-  - [ ] JSON serializer/deserializer
+  - [x] JSON serializer/deserializer
   - [x] Lifecycle pipeline executor
-- [~] Link generated code with runtime
+- [x] Link generated code with runtime
 - [x] Produce final executable binary
 
 ### 10.6 Output Binary

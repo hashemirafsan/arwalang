@@ -3,8 +3,9 @@ use std::collections::HashMap;
 use cranelift_codegen::ir::{types, InstBuilder};
 use cranelift_codegen::settings;
 use cranelift_frontend::{FunctionBuilder, FunctionBuilderContext};
-use cranelift_module::{default_libcall_names, Linkage, Module};
+use cranelift_module::{default_libcall_names, DataDescription, Linkage, Module};
 use cranelift_object::{ObjectBuilder, ObjectModule};
+use serde::Serialize;
 
 use crate::codegen::{CodegenBackend, CodegenError};
 use crate::ir::{IrFunction, IrInstruction, IrModule, IrType, IrValue};
@@ -43,12 +44,89 @@ impl CodegenBackend for CraneliftBackend {
         for function in &ir.functions {
             compile_function(&mut module, function)?;
         }
+        emit_runtime_table_metadata(&mut module, ir)?;
 
         let object = module.finish();
         object.emit().map_err(|err| CodegenError::Backend {
             message: format!("object emission failed: {err}"),
         })
     }
+}
+
+fn emit_runtime_table_metadata(
+    module: &mut ObjectModule,
+    ir: &IrModule,
+) -> Result<(), CodegenError> {
+    define_u64_data_symbol(module, "__arwa_route_count", ir.route_table.len() as u64)?;
+    define_u64_data_symbol(module, "__arwa_di_count", ir.di_registry.len() as u64)?;
+    define_u64_data_symbol(module, "__arwa_pipeline_count", ir.pipelines.len() as u64)?;
+
+    define_json_table_symbols(module, "__arwa_routes_json", &ir.route_table)?;
+    define_json_table_symbols(module, "__arwa_di_json", &ir.di_registry)?;
+    define_json_table_symbols(module, "__arwa_pipelines_json", &ir.pipelines)?;
+
+    Ok(())
+}
+
+fn define_json_table_symbols<T: Serialize>(
+    module: &mut ObjectModule,
+    data_symbol: &str,
+    payload: &T,
+) -> Result<(), CodegenError> {
+    let json = serde_json::to_vec(payload).map_err(|err| CodegenError::Backend {
+        message: format!("serialize linked table '{data_symbol}' failed: {err}"),
+    })?;
+    let len = json.len() as u64;
+
+    define_blob_data_symbol(module, data_symbol, json)?;
+    define_u64_data_symbol(module, &format!("{data_symbol}_len"), len)?;
+    Ok(())
+}
+
+fn define_u64_data_symbol(
+    module: &mut ObjectModule,
+    name: &str,
+    value: u64,
+) -> Result<(), CodegenError> {
+    let data_id = module
+        .declare_data(name, Linkage::Export, true, false)
+        .map_err(|err| CodegenError::Backend {
+            message: format!("declare data '{name}' failed: {err}"),
+        })?;
+
+    let mut data = DataDescription::new();
+    data.define(value.to_le_bytes().to_vec().into_boxed_slice());
+
+    module
+        .define_data(data_id, &data)
+        .map_err(|err| CodegenError::Backend {
+            message: format!("define data '{name}' failed: {err}"),
+        })?;
+
+    Ok(())
+}
+
+fn define_blob_data_symbol(
+    module: &mut ObjectModule,
+    name: &str,
+    payload: Vec<u8>,
+) -> Result<(), CodegenError> {
+    let data_id = module
+        .declare_data(name, Linkage::Export, false, false)
+        .map_err(|err| CodegenError::Backend {
+            message: format!("declare data '{name}' failed: {err}"),
+        })?;
+
+    let mut data = DataDescription::new();
+    data.define(payload.into_boxed_slice());
+
+    module
+        .define_data(data_id, &data)
+        .map_err(|err| CodegenError::Backend {
+            message: format!("define data '{name}' failed: {err}"),
+        })?;
+
+    Ok(())
 }
 
 fn compile_function(module: &mut ObjectModule, ir_fn: &IrFunction) -> Result<(), CodegenError> {
