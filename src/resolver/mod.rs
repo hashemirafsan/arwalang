@@ -9,7 +9,14 @@ use crate::parser::ast::{
     SourceFile, Span, TopLevelItem, TypeExpr,
 };
 
-/// Resolution errors emitted by the name-resolution phase.
+/// Name-resolution failures emitted after parsing.
+///
+/// Purpose:
+/// - represent unresolved/duplicate references before type checking
+///
+/// Why this is needed:
+/// - unresolved names would cascade into confusing downstream errors
+/// - explicit resolver diagnostics keep phase boundaries clear
 #[derive(Debug, Error, Clone, PartialEq)]
 pub enum ResolveError {
     #[error("undefined type '{name}'")]
@@ -22,7 +29,11 @@ pub enum ResolveError {
     DuplicateSymbol { name: String, span: Span },
 }
 
-/// Symbol categories tracked in lexical scopes.
+/// Symbol categories tracked by scoped resolution.
+///
+/// Why this is needed:
+/// - the resolver must distinguish declarations by role (type/module/method/etc.)
+///   for correct lookup and duplicate handling
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SymbolKind {
     Module,
@@ -37,7 +48,10 @@ pub enum SymbolKind {
     Variable,
 }
 
-/// A named symbol with its source declaration span.
+/// Resolved symbol record stored in symbol table scopes.
+///
+/// Why this is needed:
+/// - links declaration identity and location for diagnostics and duplicate checks
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Symbol {
     pub name: String,
@@ -46,6 +60,12 @@ pub struct Symbol {
 }
 
 /// Hierarchical symbol table (file -> class -> method scopes).
+///
+/// Purpose:
+/// - provide lexical scoping behavior for declarations and references
+///
+/// Why this is needed:
+/// - method-level names may shadow class/file symbols safely
 #[derive(Debug, Default, Clone)]
 pub struct SymbolTable {
     scopes: Vec<HashMap<String, Symbol>>,
@@ -53,18 +73,24 @@ pub struct SymbolTable {
 
 impl SymbolTable {
     /// Creates a symbol table with one root scope.
+    ///
+    /// Why this is needed:
+    /// - resolver operations assume an always-available file scope
     pub fn new() -> Self {
         Self {
             scopes: vec![HashMap::new()],
         }
     }
 
-    /// Enters a nested scope.
+    /// Enters a nested lexical scope.
     pub fn enter_scope(&mut self) {
         self.scopes.push(HashMap::new());
     }
 
     /// Exits the current scope, preserving at least the root scope.
+    ///
+    /// Why this is needed:
+    /// - prevents accidental underflow and keeps lookup model consistent
     pub fn exit_scope(&mut self) {
         if self.scopes.len() > 1 {
             let _ = self.scopes.pop();
@@ -72,6 +98,9 @@ impl SymbolTable {
     }
 
     /// Inserts a symbol into the current scope.
+    ///
+    /// Why this is needed:
+    /// - duplicate detection must be scope-local, not global
     pub fn insert(&mut self, symbol: Symbol) -> Result<(), Symbol> {
         if self.scopes.is_empty() {
             self.scopes.push(HashMap::new());
@@ -87,6 +116,9 @@ impl SymbolTable {
     }
 
     /// Looks up a symbol from innermost to outermost scope.
+    ///
+    /// Why this is needed:
+    /// - mirrors lexical name resolution rules used by the language
     pub fn lookup(&self, name: &str) -> Option<&Symbol> {
         for scope in self.scopes.iter().rev() {
             if let Some(symbol) = scope.get(name) {
@@ -97,7 +129,13 @@ impl SymbolTable {
     }
 }
 
-/// Name resolver for ArwaLang AST.
+/// Name resolver pass for ArwaLang AST.
+///
+/// Purpose:
+/// - bind identifiers/types/modules to known declarations
+///
+/// Why this is needed:
+/// - type checker and graph phases assume references are already resolved
 #[derive(Debug, Default)]
 pub struct Resolver {
     symbols: SymbolTable,
@@ -108,6 +146,9 @@ pub struct Resolver {
 
 impl Resolver {
     /// Creates a new resolver instance.
+    ///
+    /// Why this is needed:
+    /// - each file/pipeline run should start from clean symbol/error state
     pub fn new() -> Self {
         Self {
             symbols: SymbolTable::new(),
@@ -118,6 +159,12 @@ impl Resolver {
     }
 
     /// Resolves all names in a source file and collects resolution errors.
+    ///
+    /// Purpose:
+    /// - run complete phase-3 validation in one call
+    ///
+    /// Why this is needed:
+    /// - compiler pipeline requires deterministic phase entrypoint + aggregated errors
     pub fn resolve_source_file(&mut self, ast: &SourceFile) -> Result<(), Vec<ResolveError>> {
         self.collect_top_level_symbols(ast);
 
@@ -132,6 +179,10 @@ impl Resolver {
         }
     }
 
+    /// Collects top-level declarations into symbol/type/module registries.
+    ///
+    /// Why this is needed:
+    /// - resolution of later references requires declarations to be known first.
     fn collect_top_level_symbols(&mut self, ast: &SourceFile) {
         for item in &ast.items {
             match item {
@@ -176,6 +227,7 @@ impl Resolver {
         }
     }
 
+    /// Dispatches resolution behavior by top-level item kind.
     fn resolve_top_level_item(&mut self, item: &TopLevelItem) {
         match item {
             TopLevelItem::Module(module) => self.resolve_module(module),
@@ -202,6 +254,10 @@ impl Resolver {
         }
     }
 
+    /// Resolves module-level references (imports/providers/controllers/exports).
+    ///
+    /// Why this is needed:
+    /// - module graph and DI phases assume symbol references are valid.
     fn resolve_module(&mut self, module: &ModuleDecl) {
         for import in &module.imports {
             if !self.module_names.contains(import) {
@@ -231,6 +287,7 @@ impl Resolver {
         }
     }
 
+    /// Resolves class interfaces, fields, constructor params, and methods.
     fn resolve_class(&mut self, class: &ClassDecl) {
         for interface_name in &class.implements {
             self.resolve_type_name(interface_name, &class.span);
@@ -260,6 +317,7 @@ impl Resolver {
         self.symbols.exit_scope();
     }
 
+    /// Resolves one method signature and its parameter scope.
     fn resolve_method(&mut self, method: &MethodDecl) {
         self.insert_symbol(method.name.clone(), SymbolKind::Method, method.span.clone());
         self.resolve_annotations(&method.annotations);
@@ -272,6 +330,7 @@ impl Resolver {
         self.symbols.exit_scope();
     }
 
+    /// Resolves a method/constructor parameter declaration.
     fn resolve_param(&mut self, param: &Param) {
         self.insert_symbol(
             param.name.clone(),
@@ -282,6 +341,10 @@ impl Resolver {
         self.resolve_annotations(&param.annotations);
     }
 
+    /// Resolves identifier references appearing in annotation arguments.
+    ///
+    /// Why this is needed:
+    /// - lifecycle and routing annotations can reference classes by name.
     fn resolve_annotations(&mut self, annotations: &[Annotation]) {
         for annotation in annotations {
             for arg in &annotation.args {
@@ -297,6 +360,7 @@ impl Resolver {
         }
     }
 
+    /// Recursively resolves names used inside annotation expressions.
     fn resolve_annotation_expr(&mut self, expr: &Expr, span: &Span) {
         match expr {
             Expr::Ident(name) => {
@@ -327,6 +391,7 @@ impl Resolver {
         }
     }
 
+    /// Resolves nested type expression references.
     fn resolve_type_expr(&mut self, ty: &TypeExpr, span: &Span) {
         match ty {
             TypeExpr::Named(name) => self.resolve_type_name(name, span),
@@ -344,6 +409,7 @@ impl Resolver {
         }
     }
 
+    /// Resolves a type name against declared and built-in types.
     fn resolve_type_name(&mut self, name: &str, span: &Span) {
         if !self.type_names.contains(name) && !self.is_builtin_type_name(name) {
             self.errors.push(ResolveError::UndefinedType {
@@ -353,6 +419,7 @@ impl Resolver {
         }
     }
 
+    /// Ensures a symbol exists either in current table or built-ins.
     fn ensure_symbol_exists(&mut self, name: &str, span: &Span) {
         if self.symbols.lookup(name).is_none() && !self.is_builtin_type_name(name) {
             self.errors.push(ResolveError::UndefinedSymbol {
@@ -362,6 +429,7 @@ impl Resolver {
         }
     }
 
+    /// Inserts symbol and records duplicate-symbol diagnostics.
     fn insert_symbol(&mut self, name: String, kind: SymbolKind, span: Span) {
         let result = self.symbols.insert(Symbol {
             name: name.clone(),
@@ -375,6 +443,7 @@ impl Resolver {
         }
     }
 
+    /// Returns whether a name is a built-in type understood by compiler v1.
     fn is_builtin_type_name(&self, name: &str) -> bool {
         matches!(
             name,
@@ -394,6 +463,7 @@ impl Resolver {
         )
     }
 
+    /// Returns whether a name is a built-in annotation in v1.
     fn is_builtin_annotation_name(&self, name: &str) -> bool {
         matches!(
             name,

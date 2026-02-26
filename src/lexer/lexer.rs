@@ -6,7 +6,14 @@ use thiserror::Error;
 
 use crate::lexer::token::{Span, Token, TokenKind};
 
-/// Errors produced while lexing source text.
+/// Lexing failures produced while scanning source text.
+///
+/// Purpose:
+/// - capture recoverable tokenization problems with precise location
+///
+/// Why this is needed:
+/// - parser/type phases depend on stable token stream boundaries
+/// - diagnostics need exact line/column for actionable feedback
 #[derive(Debug, Error, PartialEq)]
 pub enum LexError {
     #[error("unterminated string literal at {line}:{col}")]
@@ -19,7 +26,14 @@ pub enum LexError {
     InvalidEscape { escape: char, line: u32, col: u32 },
 }
 
-/// Hand-written lexer for ArwaLang source files.
+/// Hand-written lexer that converts raw `.rw` text into tokens.
+///
+/// Purpose:
+/// - provide deterministic tokenization for the parser
+///
+/// Why this is needed:
+/// - ArwaLang grammar has custom symbols/annotations requiring explicit control
+/// - compile-time guarantees start with correct lexical boundaries
 #[derive(Debug)]
 pub struct Lexer {
     source: Vec<char>,
@@ -30,7 +44,10 @@ pub struct Lexer {
 }
 
 impl Lexer {
-    /// Creates a lexer for source content and file path.
+    /// Creates a lexer from source text and source file path.
+    ///
+    /// Why this is needed:
+    /// - file path is embedded into token spans for downstream diagnostics
     pub fn new(source: String, file: PathBuf) -> Self {
         Self {
             source: source.chars().collect(),
@@ -41,7 +58,13 @@ impl Lexer {
         }
     }
 
-    /// Returns the next token or a lex error.
+    /// Produces the next token from input or a lex error.
+    ///
+    /// Purpose:
+    /// - incremental scanner API for parser-driven consumption
+    ///
+    /// Why this is needed:
+    /// - enables streaming tokenization and localized recovery behavior
     pub fn next_token(&mut self) -> Result<Token, LexError> {
         self.skip_non_newline_whitespace_and_comments()?;
 
@@ -220,7 +243,10 @@ impl Lexer {
         Ok(Token { kind: token, span })
     }
 
-    /// Lexes the full input while collecting recoverable errors.
+    /// Tokenizes the full file, collecting errors without stopping at first failure.
+    ///
+    /// Why this is needed:
+    /// - improves developer feedback by reporting multiple lexical issues per run
     pub fn tokenize_all(&mut self) -> (Vec<Token>, Vec<LexError>) {
         let mut tokens = Vec::new();
         let mut errors = Vec::new();
@@ -250,6 +276,10 @@ impl Lexer {
         (tokens, errors)
     }
 
+    /// Skips spaces/tabs/comments while preserving newline tokens.
+    ///
+    /// Why this is needed:
+    /// - newlines are significant for diagnostics and parser recovery points.
     fn skip_non_newline_whitespace_and_comments(&mut self) -> Result<(), LexError> {
         loop {
             while let Some(ch) = self.peek() {
@@ -303,6 +333,10 @@ impl Lexer {
         Ok(())
     }
 
+    /// Lexes an identifier and upgrades it to a keyword/bool literal when applicable.
+    ///
+    /// Why this is needed:
+    /// - parser expects keyword token kinds instead of raw identifier text.
     fn lex_ident_or_keyword(&mut self) -> TokenKind {
         let mut ident = String::new();
         while let Some(ch) = self.peek() {
@@ -341,6 +375,10 @@ impl Lexer {
         }
     }
 
+    /// Lexes decimal integer and float literals.
+    ///
+    /// Why this is needed:
+    /// - numeric token boundaries must be established before parser precedence logic.
     fn lex_number(&mut self) -> TokenKind {
         let mut number = String::new();
         while let Some(ch) = self.peek() {
@@ -373,6 +411,10 @@ impl Lexer {
         TokenKind::IntLiteral(value)
     }
 
+    /// Lexes a double-quoted string with supported escape sequences.
+    ///
+    /// Why this is needed:
+    /// - invalid or unterminated strings must be caught at lexical phase.
     fn lex_string(&mut self) -> Result<TokenKind, LexError> {
         let start = self.current_span();
         self.advance();
@@ -430,6 +472,10 @@ impl Lexer {
         })
     }
 
+    /// Builds span at the current cursor position.
+    ///
+    /// Why this is needed:
+    /// - every emitted token/error must carry source location metadata.
     fn current_span(&self) -> Span {
         Span {
             file: self.file.clone(),
@@ -438,14 +484,20 @@ impl Lexer {
         }
     }
 
+    /// Returns current character without consuming it.
     fn peek(&self) -> Option<char> {
         self.source.get(self.index).copied()
     }
 
+    /// Returns next character without consuming it.
     fn peek_next(&self) -> Option<char> {
         self.source.get(self.index + 1).copied()
     }
 
+    /// Consumes current char if it matches `expected`.
+    ///
+    /// Why this is needed:
+    /// - multi-char operator parsing (`==`, `!=`, `->`, `=>`, etc.) depends on lookahead.
     fn consume_if(&mut self, expected: char) -> bool {
         if self.peek() == Some(expected) {
             self.advance();
@@ -455,6 +507,10 @@ impl Lexer {
         }
     }
 
+    /// Consumes one character and updates line/column counters.
+    ///
+    /// Why this is needed:
+    /// - precise position tracking is foundational for all diagnostics.
     fn advance(&mut self) -> Option<char> {
         let ch = self.peek()?;
         self.index += 1;

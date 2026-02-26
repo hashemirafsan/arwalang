@@ -12,7 +12,14 @@ use crate::parser::ast::{
     ProviderBinding, SourceFile, Span, Stmt, StructDecl, TopLevelItem, TypeExpr, UnaryOp,
 };
 
-/// Parse errors emitted while building AST from token stream.
+/// Structured parse failures emitted while building AST from tokens.
+///
+/// Purpose:
+/// - represent grammar violations with precise context
+///
+/// Why this is needed:
+/// - parser must recover and continue to report multiple issues
+/// - later error reporting phase relies on rich, typed parse errors
 #[derive(Debug, Error, Clone, PartialEq)]
 pub enum ParseError {
     #[error("unexpected token: expected {expected}, found {found}")]
@@ -29,7 +36,13 @@ pub enum ParseError {
     InvalidSyntax { message: String, span: Span },
 }
 
-/// Recursive-descent parser for ArwaLang.
+/// Recursive-descent parser for ArwaLang grammar.
+///
+/// Purpose:
+/// - convert token stream into strongly-typed AST nodes
+///
+/// Why this is needed:
+/// - all semantic phases (resolver/typechecker/graphs) depend on AST correctness
 #[derive(Debug)]
 pub struct Parser {
     tokens: Vec<Token>,
@@ -39,6 +52,9 @@ pub struct Parser {
 
 impl Parser {
     /// Creates parser from pre-tokenized input.
+    ///
+    /// Why this is needed:
+    /// - parser runs after lexer and reuses token spans for syntax diagnostics
     pub fn new(tokens: Vec<Token>) -> Self {
         let file = tokens
             .first()
@@ -51,7 +67,13 @@ impl Parser {
         }
     }
 
-    /// Parses all top-level items and collects recoverable parse errors.
+    /// Parses full source file and accumulates recoverable parse errors.
+    ///
+    /// Purpose:
+    /// - produce one AST root or a list of syntax problems
+    ///
+    /// Why this is needed:
+    /// - fail-fast behavior is insufficient; users need full syntax feedback per run
     pub fn parse_source_file(&mut self) -> Result<SourceFile, Vec<ParseError>> {
         let mut items = Vec::new();
         let mut errors = Vec::new();
@@ -80,7 +102,10 @@ impl Parser {
         }
     }
 
-    /// Parses one top-level item.
+    /// Parses one top-level declaration item.
+    ///
+    /// Why this is needed:
+    /// - top-level dispatch drives module/class/interface/struct/enum/import parsing paths
     pub fn parse_top_level_item(&mut self) -> Result<TopLevelItem, ParseError> {
         let annotations = self.parse_annotations()?;
 
@@ -123,6 +148,10 @@ impl Parser {
         })
     }
 
+    /// Parses a file-level import declaration.
+    ///
+    /// Why this is needed:
+    /// - imports are required for module/type visibility in later phases.
     fn parse_import(&mut self) -> Result<ImportDecl, ParseError> {
         let start = self.expect_kind(&TokenKind::Import, "import")?.span;
         let name = self.expect_ident("import target")?;
@@ -134,6 +163,10 @@ impl Parser {
         })
     }
 
+    /// Parses a `module { ... }` declaration body.
+    ///
+    /// Why this is needed:
+    /// - DI/module graph phases depend on normalized module metadata.
     fn parse_module(&mut self) -> Result<ModuleDecl, ParseError> {
         let start = self.expect_kind(&TokenKind::Module, "module")?.span;
         let name = self.expect_ident("module name")?;
@@ -198,6 +231,10 @@ impl Parser {
         })
     }
 
+    /// Parses a class declaration including members and optional constructor.
+    ///
+    /// Why this is needed:
+    /// - class definitions provide providers/controllers and method surfaces.
     fn parse_class(&mut self, annotations: Vec<Annotation>) -> Result<ClassDecl, ParseError> {
         let start = self.expect_kind(&TokenKind::Class, "class")?.span;
         let name = self.expect_ident("class name")?;
@@ -265,6 +302,10 @@ impl Parser {
         })
     }
 
+    /// Parses an interface declaration and its method signatures.
+    ///
+    /// Why this is needed:
+    /// - lifecycle and DI validations rely on interface contracts.
     fn parse_interface(
         &mut self,
         annotations: Vec<Annotation>,
@@ -291,6 +332,10 @@ impl Parser {
         })
     }
 
+    /// Parses a struct declaration.
+    ///
+    /// Why this is needed:
+    /// - struct fields participate in DTO/serializability type checks.
     fn parse_struct(&mut self, annotations: Vec<Annotation>) -> Result<StructDecl, ParseError> {
         let start = self.expect_kind(&TokenKind::Struct, "struct")?.span;
         let name = self.expect_ident("struct name")?;
@@ -315,6 +360,10 @@ impl Parser {
         })
     }
 
+    /// Parses an enum declaration with variant list.
+    ///
+    /// Why this is needed:
+    /// - enums are first-class type declarations referenced by resolver/checker.
     fn parse_enum(&mut self, annotations: Vec<Annotation>) -> Result<EnumDecl, ParseError> {
         let start = self.expect_kind(&TokenKind::Enum, "enum")?.span;
         let name = self.expect_ident("enum name")?;
@@ -347,6 +396,10 @@ impl Parser {
         })
     }
 
+    /// Parses class constructor parameters and optional body.
+    ///
+    /// Why this is needed:
+    /// - constructor params drive DI dependency edges in later phases.
     fn parse_constructor(
         &mut self,
         annotations: Vec<Annotation>,
@@ -375,6 +428,10 @@ impl Parser {
         })
     }
 
+    /// Parses a class method declaration.
+    ///
+    /// Why this is needed:
+    /// - method signatures and bodies are central to type/lifecycle validation.
     fn parse_method(&mut self, annotations: Vec<Annotation>) -> Result<MethodDecl, ParseError> {
         let start = self.expect_kind(&TokenKind::Fn, "fn")?.span;
         let name = self.expect_ident("method name")?;
@@ -394,6 +451,7 @@ impl Parser {
         })
     }
 
+    /// Parses an interface method signature (no executable body).
     fn parse_method_signature(&mut self) -> Result<MethodSignature, ParseError> {
         let start = self.expect_kind(&TokenKind::Fn, "fn")?.span;
         let name = self.expect_ident("method name")?;
@@ -410,6 +468,7 @@ impl Parser {
         })
     }
 
+    /// Parses a field declaration (`name: Type`).
     fn parse_field(&mut self) -> Result<FieldDecl, ParseError> {
         let start = self.peek().span.clone();
         let name = self.expect_ident("field name")?;
@@ -425,6 +484,10 @@ impl Parser {
         })
     }
 
+    /// Parses parameter list for methods/constructors.
+    ///
+    /// Why this is needed:
+    /// - preserves annotation/type/private metadata used by semantic phases.
     fn parse_params(&mut self, allow_private: bool) -> Result<Vec<Param>, ParseError> {
         self.expect_kind(&TokenKind::LParen, "(")?;
         let mut params = Vec::new();
@@ -469,6 +532,10 @@ impl Parser {
         Ok(params)
     }
 
+    /// Parses stacked `#[...]` annotations and argument lists.
+    ///
+    /// Why this is needed:
+    /// - annotation processor and route/lifecycle builders require exact annotation AST.
     fn parse_annotations(&mut self) -> Result<Vec<Annotation>, ParseError> {
         let mut annotations = Vec::new();
 
@@ -522,6 +589,10 @@ impl Parser {
         Ok(annotations)
     }
 
+    /// Parses type expressions including generic, Result, and Option forms.
+    ///
+    /// Why this is needed:
+    /// - resolver/typechecker depend on normalized type expression trees.
     fn parse_type_expr(&mut self) -> Result<TypeExpr, ParseError> {
         let name = self.expect_ident("type name")?;
         if self.match_kind(&TokenKind::Lt) {
@@ -557,6 +628,7 @@ impl Parser {
         Ok(TypeExpr::Named(name))
     }
 
+    /// Parses a brace-delimited statement block.
     fn parse_block(&mut self) -> Result<Block, ParseError> {
         self.expect_kind(&TokenKind::LBrace, "{")?;
         let mut stmts = Vec::new();
@@ -574,6 +646,7 @@ impl Parser {
         Ok(Block { stmts })
     }
 
+    /// Parses one statement by leading token dispatch.
     fn parse_stmt(&mut self) -> Result<Stmt, ParseError> {
         if self.check_kind(&TokenKind::Let) {
             return self.parse_let_stmt();
@@ -590,6 +663,7 @@ impl Parser {
         Ok(Stmt::Expr(expr))
     }
 
+    /// Parses `let` bindings with optional type annotation.
     fn parse_let_stmt(&mut self) -> Result<Stmt, ParseError> {
         self.expect_kind(&TokenKind::Let, "let")?;
         let name = self.expect_ident("variable name")?;
@@ -606,6 +680,7 @@ impl Parser {
         Ok(Stmt::Let { name, ty, value })
     }
 
+    /// Parses `return` statements with optional expression.
     fn parse_return_stmt(&mut self) -> Result<Stmt, ParseError> {
         self.expect_kind(&TokenKind::Return, "return")?;
         if self.check_kind(&TokenKind::Semicolon)
@@ -621,6 +696,7 @@ impl Parser {
         Ok(Stmt::Return(Some(expr)))
     }
 
+    /// Parses `if` / `else` control-flow statements.
     fn parse_if_stmt(&mut self) -> Result<Stmt, ParseError> {
         self.expect_kind(&TokenKind::If, "if")?;
         let cond = self.parse_expr()?;
@@ -634,10 +710,12 @@ impl Parser {
         Ok(Stmt::If { cond, then, else_ })
     }
 
+    /// Entry point for expression parsing (lowest precedence layer).
     fn parse_expr(&mut self) -> Result<Expr, ParseError> {
         self.parse_or()
     }
 
+    /// Parses logical OR expressions.
     fn parse_or(&mut self) -> Result<Expr, ParseError> {
         let mut expr = self.parse_and()?;
         while self.match_kind(&TokenKind::Or) {
@@ -651,6 +729,7 @@ impl Parser {
         Ok(expr)
     }
 
+    /// Parses logical AND expressions.
     fn parse_and(&mut self) -> Result<Expr, ParseError> {
         let mut expr = self.parse_equality()?;
         while self.match_kind(&TokenKind::And) {
@@ -664,6 +743,7 @@ impl Parser {
         Ok(expr)
     }
 
+    /// Parses equality expressions (`==`, `!=`).
     fn parse_equality(&mut self) -> Result<Expr, ParseError> {
         let mut expr = self.parse_comparison()?;
         loop {
@@ -690,6 +770,7 @@ impl Parser {
         Ok(expr)
     }
 
+    /// Parses comparison expressions (`<`, `>`, `<=`, `>=`).
     fn parse_comparison(&mut self) -> Result<Expr, ParseError> {
         let mut expr = self.parse_term()?;
         loop {
@@ -719,6 +800,7 @@ impl Parser {
         Ok(expr)
     }
 
+    /// Parses additive expressions (`+`, `-`).
     fn parse_term(&mut self) -> Result<Expr, ParseError> {
         let mut expr = self.parse_factor()?;
         loop {
@@ -745,6 +827,7 @@ impl Parser {
         Ok(expr)
     }
 
+    /// Parses multiplicative expressions (`*`, `/`).
     fn parse_factor(&mut self) -> Result<Expr, ParseError> {
         let mut expr = self.parse_unary()?;
         loop {
@@ -771,6 +854,7 @@ impl Parser {
         Ok(expr)
     }
 
+    /// Parses unary prefix expressions (`!`, `-`).
     fn parse_unary(&mut self) -> Result<Expr, ParseError> {
         if self.match_kind(&TokenKind::Bang) {
             return Ok(Expr::UnaryOp {
@@ -788,6 +872,10 @@ impl Parser {
         self.parse_postfix()
     }
 
+    /// Parses postfix call/field-access chains.
+    ///
+    /// Why this is needed:
+    /// - call and member access must bind tighter than binary operators.
     fn parse_postfix(&mut self) -> Result<Expr, ParseError> {
         let mut expr = self.parse_primary()?;
 
@@ -828,6 +916,7 @@ impl Parser {
         Ok(expr)
     }
 
+    /// Parses primary expressions (literals, identifiers, parenthesized forms).
     fn parse_primary(&mut self) -> Result<Expr, ParseError> {
         let token = self.peek().clone();
         match token.kind {
@@ -869,6 +958,10 @@ impl Parser {
         }
     }
 
+    /// Skips over constructor body tokens while preserving brace balance.
+    ///
+    /// Why this is needed:
+    /// - parser keeps constructor body out of current semantic scope but must stay synchronized.
     fn skip_block_contents(&mut self) -> Result<(), ParseError> {
         let mut depth: i32 = 1;
         while depth > 0 {
@@ -894,6 +987,10 @@ impl Parser {
         Ok(())
     }
 
+    /// Recovers parser state to the next plausible top-level boundary.
+    ///
+    /// Why this is needed:
+    /// - allows collecting multiple syntax errors in one parse run.
     fn synchronize_top_level(&mut self) {
         while !self.is_at_end() {
             if self.match_kind(&TokenKind::Semicolon) || self.match_kind(&TokenKind::Newline) {
@@ -915,6 +1012,7 @@ impl Parser {
         }
     }
 
+    /// Consumes optional statement terminator and trailing newlines.
     fn consume_semicolon_or_newline(&mut self) {
         if self.match_kind(&TokenKind::Semicolon) {
             self.skip_newlines();
@@ -927,10 +1025,12 @@ impl Parser {
         self.skip_newlines();
     }
 
+    /// Consumes contiguous newline tokens.
     fn skip_newlines(&mut self) {
         while self.match_kind(&TokenKind::Newline) {}
     }
 
+    /// Expects an identifier token and returns its text.
     fn expect_ident(&mut self, what: &str) -> Result<String, ParseError> {
         let token = self.peek().clone();
         if let TokenKind::Ident(value) = token.kind {
@@ -950,6 +1050,7 @@ impl Parser {
         }
     }
 
+    /// Expects a token of specific kind.
     fn expect_kind(&mut self, kind: &TokenKind, expected: &str) -> Result<Token, ParseError> {
         let token = self.peek().clone();
         if self.check_kind(kind) {
@@ -969,10 +1070,12 @@ impl Parser {
         }
     }
 
+    /// Checks current token kind without consuming.
     fn check_kind(&self, kind: &TokenKind) -> bool {
         mem::discriminant(&self.peek().kind) == mem::discriminant(kind)
     }
 
+    /// Matches and consumes current token if kind matches.
     fn match_kind(&mut self, kind: &TokenKind) -> bool {
         if self.check_kind(kind) {
             self.advance();
@@ -982,6 +1085,7 @@ impl Parser {
         }
     }
 
+    /// Matches identifier token by exact text.
     fn match_ident_text(&mut self, expected: &str) -> bool {
         if let TokenKind::Ident(value) = &self.peek().kind {
             if value == expected {
@@ -992,6 +1096,7 @@ impl Parser {
         false
     }
 
+    /// Returns current identifier text without consuming.
     fn peek_ident_text(&self) -> Option<String> {
         if let TokenKind::Ident(value) = &self.peek().kind {
             Some(value.clone())
@@ -1000,21 +1105,25 @@ impl Parser {
         }
     }
 
+    /// Checks next token kind (one-token lookahead).
     fn peek_next_is(&self, kind: &TokenKind) -> bool {
         self.tokens
             .get(self.current + 1)
             .is_some_and(|t| mem::discriminant(&t.kind) == mem::discriminant(kind))
     }
 
+    /// Returns current token reference.
     fn peek(&self) -> &Token {
         let fallback = self.tokens.len().saturating_sub(1);
         &self.tokens[self.current.min(fallback)]
     }
 
+    /// Checks whether parser cursor is at EOF token.
     fn is_at_end(&self) -> bool {
         self.check_kind(&TokenKind::Eof)
     }
 
+    /// Advances cursor to next token and returns current token reference.
     fn advance(&mut self) -> &Token {
         if !self.is_at_end() {
             self.current += 1;
@@ -1022,6 +1131,7 @@ impl Parser {
         self.peek()
     }
 
+    /// Builds AST span from start token span to current parser position.
     fn span_from(&self, start: &crate::lexer::token::Span) -> Span {
         let end = self.peek().span.clone();
         Span {
@@ -1033,6 +1143,7 @@ impl Parser {
         }
     }
 
+    /// Builds single-point span at current parser token.
     fn current_span(&self) -> Span {
         let token = self.peek();
         Span {
