@@ -25,13 +25,16 @@ Implement `arwa` command entrypoints for build/check/run workflows.
 - Added CLI tests:
   - command argument parsing tests
   - build integration-like test (minimal app -> executable artifact)
+  - check integration-like tests (valid + invalid source)
   - run integration-like test (minimal app -> execute binary)
+- Added CLI error typing + exit-code mapping:
+  - compilation/runtime errors -> exit code `1`
+  - usage/unsupported command errors -> exit code `2`
 
 ## Current Gaps
 
 - `new`, `add`, and `fmt` are not implemented yet.
 - Build/check currently operate on a single source file, not full project file discovery.
-- CLI exit code mapping policy is not fully wired.
 
 ## Validation Performed
 

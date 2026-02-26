@@ -869,7 +869,7 @@ Execution policy for this phase:
 - [x] Implement `run(args: CheckArgs) -> Result<(), Error>`
   - [x] Run phases 1-9 (all validation, no codegen)
   - [x] Report errors and warnings
-  - [ ] Exit with appropriate code
+  - [x] Exit with appropriate code
 
 ### 12.5 Implement `arwa run` Command
 - [x] Create `src/cli/run.rs`
@@ -905,21 +905,21 @@ Execution policy for this phase:
 ### 12.8 CLI Error Handling
 - [ ] Implement user-friendly error messages
 - [ ] Use appropriate exit codes
-  - [ ] 0 for success
-  - [ ] 1 for compilation errors
-  - [ ] 2 for CLI usage errors
+  - [x] 0 for success
+  - [x] 1 for compilation errors
+  - [x] 2 for CLI usage errors
 - [ ] Handle file system errors gracefully
 - [ ] Handle missing dependencies
 
 ### 12.9 CLI Tests
 - [ ] Integration test: `arwa new` creates project
 - [x] Integration test: `arwa build` compiles minimal project
-- [ ] Integration test: `arwa check` validates without codegen
+- [x] Integration test: `arwa check` validates without codegen
 - [x] Integration test: `arwa run` executes binary
 - [ ] Integration test: `arwa add` adds feature
 - [ ] Integration test: `arwa fmt` formats files
 - [x] Unit test: CLI argument parsing
-- [ ] Unit test: error handling and exit codes
+- [x] Unit test: error handling and exit codes
 
 ---
 

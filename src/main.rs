@@ -15,6 +15,6 @@ mod typechecker;
 fn main() {
     if let Err(err) = cli::run() {
         eprintln!("{err}");
-        std::process::exit(2);
+        std::process::exit(err.exit_code());
     }
 }
