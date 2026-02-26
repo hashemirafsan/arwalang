@@ -232,52 +232,52 @@ This document breaks down the ArwaLang compiler implementation into granular tas
 ## 3. Phase 3 - Name Resolution
 
 ### 3.1 Implement Symbol Table
-- [ ] Create `src/resolver/mod.rs`
-- [ ] Define `SymbolTable` struct
-  - [ ] Implement scope hierarchy (file → class → method)
-  - [ ] Implement `insert(name: String, kind: SymbolKind, span: Span)`
-  - [ ] Implement `lookup(name: String) -> Option<&Symbol>`
-  - [ ] Implement `enter_scope()` and `exit_scope()`
-- [ ] Define `Symbol` struct (name, kind, type, span)
-- [ ] Define `SymbolKind` enum (Type, Variable, Class, Interface, etc.)
+- [x] Create `src/resolver/mod.rs`
+- [x] Define `SymbolTable` struct
+  - [x] Implement scope hierarchy (file → class → method)
+  - [x] Implement `insert(name: String, kind: SymbolKind, span: Span)`
+  - [x] Implement `lookup(name: String) -> Option<&Symbol>`
+  - [x] Implement `enter_scope()` and `exit_scope()`
+- [x] Define `Symbol` struct (name, kind, type, span)
+- [x] Define `SymbolKind` enum (Type, Variable, Class, Interface, etc.)
 
 ### 3.2 Implement Name Resolution Pass
-- [ ] Implement `Resolver` struct
-- [ ] Implement `resolve_source_file(ast: &SourceFile) -> Result<(), Vec<ResolveError>>`
-- [ ] Implement `resolve_module(module: &ModuleDecl)`
-  - [ ] Resolve imported module names
-  - [ ] Resolve provider class names
-  - [ ] Resolve controller class names
-  - [ ] Resolve exported symbol names
-- [ ] Implement `resolve_class(class: &ClassDecl)`
-  - [ ] Resolve implemented interface names
-  - [ ] Resolve constructor parameter types
-  - [ ] Resolve field types
-  - [ ] Resolve method parameter and return types
-- [ ] Implement `resolve_type_expr(ty: &TypeExpr)`
-  - [ ] Resolve Named types
-  - [ ] Resolve Generic type parameters
-  - [ ] Resolve Result and Option inner types
-- [ ] Implement `resolve_annotation(annotation: &Annotation)`
-  - [ ] Resolve class references in annotation arguments
+- [x] Implement `Resolver` struct
+- [x] Implement `resolve_source_file(ast: &SourceFile) -> Result<(), Vec<ResolveError>>`
+- [x] Implement `resolve_module(module: &ModuleDecl)`
+  - [x] Resolve imported module names
+  - [x] Resolve provider class names
+  - [x] Resolve controller class names
+  - [x] Resolve exported symbol names
+- [x] Implement `resolve_class(class: &ClassDecl)`
+  - [x] Resolve implemented interface names
+  - [x] Resolve constructor parameter types
+  - [x] Resolve field types
+  - [x] Resolve method parameter and return types
+- [x] Implement `resolve_type_expr(ty: &TypeExpr)`
+  - [x] Resolve Named types
+  - [x] Resolve Generic type parameters
+  - [x] Resolve Result and Option inner types
+- [x] Implement `resolve_annotation(annotation: &Annotation)`
+  - [x] Resolve class references in annotation arguments
 
 ### 3.3 Resolution Error Handling
-- [ ] Define `ResolveError` enum using thiserror
-  - [ ] UndefinedType variant
-  - [ ] UndefinedSymbol variant
-  - [ ] DuplicateSymbol variant
-- [ ] Include span information in all errors
-- [ ] Collect all resolution errors
+- [x] Define `ResolveError` enum using thiserror
+  - [x] UndefinedType variant
+  - [x] UndefinedSymbol variant
+  - [x] DuplicateSymbol variant
+- [x] Include span information in all errors
+- [x] Collect all resolution errors
 
 ### 3.4 Name Resolution Tests
-- [ ] Unit test: resolve simple types
-- [ ] Unit test: resolve generic types
-- [ ] Unit test: resolve interface implementations
-- [ ] Unit test: resolve constructor dependencies
-- [ ] Unit test: error on undefined type
-- [ ] Unit test: error on undefined symbol
-- [ ] Unit test: error on duplicate symbols
-- [ ] Unit test: scope hierarchy works correctly
+- [x] Unit test: resolve simple types
+- [x] Unit test: resolve generic types
+- [x] Unit test: resolve interface implementations
+- [x] Unit test: resolve constructor dependencies
+- [x] Unit test: error on undefined type
+- [x] Unit test: error on undefined symbol
+- [x] Unit test: error on duplicate symbols
+- [x] Unit test: scope hierarchy works correctly
 
 ---
 
