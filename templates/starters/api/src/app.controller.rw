@@ -1,0 +1,8 @@
+#[injectable]
+#[controller("/")]
+class AppController {
+  #[get("/")]
+  fn hello(res: Result<String, HttpError>): Result<String, HttpError> {
+    return res
+  }
+}

@@ -202,8 +202,7 @@ pub extern "C" fn arwa_runtime_start() -> i32 {
         let addr = std::env::var("ARWA_RUNTIME_ADDR").unwrap_or_else(|_| "127.0.0.1:3000".to_string());
         let max_requests = std::env::var("ARWA_RUNTIME_MAX_REQUESTS")
             .ok()
-            .and_then(|v| v.parse::<usize>().ok())
-            .unwrap_or(1);
+            .and_then(|v| v.parse::<usize>().ok());
         let _ = run_http_server(&runtime, &addr, max_requests);
     }
 
@@ -257,8 +256,12 @@ pub fn format_http_response(response: &Response) -> String {
     )
 }
 
-/// Runs a minimal HTTP server loop for a bounded number of requests.
-pub fn run_http_server(runtime: &OwnedRuntime, bind_addr: &str, max_requests: usize) -> std::io::Result<()> {
+/// Runs a minimal HTTP server loop; bounded when max_requests is set.
+pub fn run_http_server(
+    runtime: &OwnedRuntime,
+    bind_addr: &str,
+    max_requests: Option<usize>,
+) -> std::io::Result<()> {
     let listener = TcpListener::bind(bind_addr)?;
     run_http_server_on_listener(runtime, listener, max_requests)
 }
@@ -267,11 +270,18 @@ pub fn run_http_server(runtime: &OwnedRuntime, bind_addr: &str, max_requests: us
 pub fn run_http_server_on_listener(
     runtime: &OwnedRuntime,
     listener: TcpListener,
-    max_requests: usize,
+    max_requests: Option<usize>,
 ) -> std::io::Result<()> {
-    for _ in 0..max_requests {
+    let mut handled = 0usize;
+    loop {
+        if let Some(limit) = max_requests {
+            if handled >= limit {
+                break;
+            }
+        }
         let (mut stream, _) = listener.accept()?;
         handle_client(runtime, &mut stream)?;
+        handled += 1;
     }
     Ok(())
 }
@@ -651,7 +661,8 @@ mod tests {
 
         let server_runtime = runtime.clone();
         let server_thread = thread::spawn(move || {
-            run_http_server_on_listener(&server_runtime, listener, 1).expect("server should run");
+            run_http_server_on_listener(&server_runtime, listener, Some(1))
+                .expect("server should run");
         });
 
         let mut client = TcpStream::connect(addr).expect("connect client");

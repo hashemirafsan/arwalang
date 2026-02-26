@@ -30,8 +30,9 @@ Implement `arwa` command entrypoints for build/check/run workflows.
   - runs validation-only pipeline (phases 1-9)
   - supports project source auto-discovery
 - Implemented `arwa run` flow in `src/cli/run.rs`:
-  - runs build
-  - executes produced binary
+  - runs build to temporary output path (does not persist `dist/` artifacts)
+  - executes produced binary in serve mode
+  - supports `--host` and `--port`
   - forwards args to generated executable
 - Implemented `arwa add` flow in `src/cli/add.rs`:
   - reads and updates `arwa.blueprint.json`

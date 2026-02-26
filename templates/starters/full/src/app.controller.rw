@@ -1,0 +1,14 @@
+#[injectable]
+#[controller("/")]
+class AppController {
+  constructor(
+    auth: AuthService,
+    db: DatabaseService,
+    logger: LoggerService,
+  ) {}
+
+  #[get("/")]
+  fn status(res: Result<String, HttpError>): Result<String, HttpError> {
+    return res
+  }
+}

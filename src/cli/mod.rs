@@ -4,6 +4,7 @@ pub mod check;
 pub mod fmt;
 pub mod new;
 pub mod run;
+pub mod templates;
 
 use std::fmt::{Display, Formatter};
 
@@ -165,6 +166,13 @@ mod tests {
     fn parses_run_command() {
         let cli =
             Cli::try_parse_from(["arwa", "run", "main.rw"]).expect("cli parsing should succeed");
+        assert!(matches!(cli.command, Some(Commands::Run(_))));
+    }
+
+    #[test]
+    fn parses_run_command_with_port() {
+        let cli = Cli::try_parse_from(["arwa", "run", "--port", "3007", "main.rw"])
+            .expect("cli parsing should succeed");
         assert!(matches!(cli.command, Some(Commands::Run(_))));
     }
 

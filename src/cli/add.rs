@@ -2,7 +2,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use clap::Args;
-use serde::{Deserialize, Serialize};
+
+use super::templates::{read_blueprint, read_registry, write_blueprint};
 
 /// CLI options for `arwa add`.
 #[derive(Debug, Clone, Args)]
@@ -12,29 +13,10 @@ pub struct AddArgs {
     pub feature: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct Registry {
-    #[serde(default)]
-    features: Vec<RegistryFeature>,
-}
-
-#[derive(Debug, Deserialize)]
-struct RegistryFeature {
-    name: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Blueprint {
-    name: String,
-    version: String,
-    starter: String,
-    #[serde(default)]
-    features: Vec<String>,
-}
-
 /// Adds a feature scaffold to the current Arwa project.
 pub fn execute_add(args: &AddArgs) -> Result<(), String> {
-    let mut blueprint = read_blueprint(Path::new("arwa.blueprint.json"))?;
+    let mut blueprint =
+        read_blueprint(Path::new("arwa.blueprint.json")).map_err(|err| format!("add: {err}"))?;
     validate_feature_exists(&args.feature)?;
 
     if blueprint.features.iter().any(|f| f == &args.feature) {
@@ -45,42 +27,29 @@ pub fn execute_add(args: &AddArgs) -> Result<(), String> {
     blueprint.features.push(args.feature.clone());
     blueprint.features.sort();
 
-    let serialized = serde_json::to_string_pretty(&blueprint)
-        .map_err(|err| format!("add: failed serializing blueprint: {err}"))?;
-    fs::write("arwa.blueprint.json", serialized)
-        .map_err(|err| format!("add: failed writing blueprint: {err}"))?;
+    write_blueprint(Path::new("arwa.blueprint.json"), &blueprint)
+        .map_err(|err| format!("add: {err}"))?;
 
     Ok(())
 }
 
-fn read_blueprint(path: &Path) -> Result<Blueprint, String> {
-    let raw = fs::read_to_string(path)
-        .map_err(|err| format!("add: failed reading '{}': {err}", path.display()))?;
-    serde_json::from_str(&raw).map_err(|err| format!("add: invalid blueprint json: {err}"))
-}
-
 fn validate_feature_exists(feature: &str) -> Result<(), String> {
-    let mut known = vec![
-        "http".to_string(),
-        "di".to_string(),
-        "logger".to_string(),
-        "auth-jwt".to_string(),
-        "db-postgres".to_string(),
-    ];
-
     let registry_path = Path::new("templates/registry.json");
-    if registry_path.exists() {
-        let raw = fs::read_to_string(registry_path)
-            .map_err(|err| format!("add: failed reading registry: {err}"))?;
-        let reg: Registry = serde_json::from_str(&raw)
-            .map_err(|err| format!("add: invalid registry json: {err}"))?;
-        known.extend(reg.features.into_iter().map(|f| f.name));
-    }
+    let reg = read_registry(registry_path).map_err(|err| format!("add: {err}"))?;
+    let mut known = reg
+        .features
+        .iter()
+        .map(|f| f.name.clone())
+        .collect::<Vec<_>>();
+    known.sort();
 
     if known.iter().any(|name| name == feature) {
         Ok(())
     } else {
-        Err(format!("add: unknown feature '{feature}'"))
+        Err(format!(
+            "add: unknown feature '{feature}'; available features: {}",
+            known.join(", ")
+        ))
     }
 }
 
@@ -159,8 +128,11 @@ mod tests {
         );
         let base = std::env::temp_dir().join(unique);
         fs::create_dir_all(base.join("templates")).expect("create templates dir");
-        fs::write(base.join("templates/registry.json"), "{\"features\":[]}")
-            .expect("write registry");
+        fs::write(
+            base.join("templates/registry.json"),
+            r#"{"features":[{"name":"logger","description":"x","files":[],"dependencies":[],"usage":[]}]}"#,
+        )
+        .expect("write registry");
         fs::write(
             base.join("arwa.blueprint.json"),
             r#"{"name":"demo","version":"0.1.0","starter":"api","features":[]}"#,

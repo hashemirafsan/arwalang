@@ -1,0 +1,4 @@
+module App {
+  provide AppController
+  control AppController
+}

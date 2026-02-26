@@ -61,7 +61,7 @@ Define compiler IR and start lowering validated AST into IR, then wire a Craneli
 ## Current Gaps
 
 - No full control-flow lowering yet (branching/basic-block graph still minimal).
-- Runtime startup currently uses env-gated HTTP serving mode and bounded request loops; production-grade server lifecycle management is still pending.
+- Runtime startup now supports unbounded serving by default and bounded loops via `ARWA_RUNTIME_MAX_REQUESTS`; production-grade lifecycle management is still pending.
 - `call` instruction lowering is currently placeholder-only.
 - Cross-platform linker behavior is not finalized.
 

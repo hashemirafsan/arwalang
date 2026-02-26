@@ -1,0 +1,3 @@
+#[injectable]
+class DatabaseService {
+}

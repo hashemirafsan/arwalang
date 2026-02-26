@@ -2,7 +2,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use clap::Args;
-use serde::Serialize;
+
+use super::templates::{write_blueprint, Blueprint};
 
 /// CLI options for `arwa new`.
 #[derive(Debug, Clone, Args)]
@@ -16,18 +17,9 @@ pub struct NewArgs {
     pub starter: String,
 }
 
-#[derive(Debug, Serialize)]
-struct Blueprint {
-    name: String,
-    version: String,
-    starter: String,
-    features: Vec<String>,
-}
-
 /// Creates a new ArwaLang project from bundled starter template.
 pub fn execute_new(args: &NewArgs) -> Result<PathBuf, String> {
     validate_project_name(&args.name)?;
-    validate_starter(&args.starter)?;
 
     let project_dir = PathBuf::from(&args.name);
     if project_dir.exists() {
@@ -37,15 +29,10 @@ pub fn execute_new(args: &NewArgs) -> Result<PathBuf, String> {
         ));
     }
 
-    fs::create_dir_all(project_dir.join("src"))
-        .map_err(|err| format!("new: failed creating project directories: {err}"))?;
+    let starter_root = PathBuf::from("templates/starters").join(&args.starter);
+    validate_starter(&starter_root, &args.starter)?;
 
-    let (module_source, controller_source) = starter_sources(&args.name, &args.starter);
-    write_file(&project_dir.join("src/main.rw"), module_source)?;
-    write_file(
-        &project_dir.join("src/app.controller.rw"),
-        &controller_source,
-    )?;
+    copy_dir_recursive(&starter_root, &project_dir)?;
 
     let blueprint = Blueprint {
         name: args.name.clone(),
@@ -53,16 +40,9 @@ pub fn execute_new(args: &NewArgs) -> Result<PathBuf, String> {
         starter: args.starter.clone(),
         features: vec!["http".to_string(), "di".to_string()],
     };
-    let blueprint_text = serde_json::to_string_pretty(&blueprint)
-        .map_err(|err| format!("new: failed serializing blueprint: {err}"))?;
-    write_file(&project_dir.join("arwa.blueprint.json"), &blueprint_text)?;
+    write_blueprint(&project_dir.join("arwa.blueprint.json"), &blueprint)?;
 
     Ok(project_dir)
-}
-
-fn write_file(path: &Path, contents: &str) -> Result<(), String> {
-    fs::write(path, contents)
-        .map_err(|err| format!("new: failed writing '{}': {err}", path.display()))
 }
 
 fn validate_project_name(name: &str) -> Result<(), String> {
@@ -76,33 +56,59 @@ fn validate_project_name(name: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn validate_starter(starter: &str) -> Result<(), String> {
-    if starter == "api" || starter == "minimal" {
-        Ok(())
-    } else {
-        Err(format!(
-            "new: unsupported starter '{}'; supported starters: api, minimal",
-            starter
-        ))
+fn validate_starter(starter_root: &Path, starter: &str) -> Result<(), String> {
+    if starter_root.exists() {
+        return Ok(());
     }
+
+    let starters_dir = PathBuf::from("templates/starters");
+    let supported = if starters_dir.exists() {
+        let mut names = Vec::new();
+        for entry in fs::read_dir(&starters_dir)
+            .map_err(|err| format!("new: failed reading '{}': {err}", starters_dir.display()))?
+        {
+            let entry = entry.map_err(|err| format!("new: failed reading starter entry: {err}"))?;
+            if entry.path().is_dir() {
+                names.push(entry.file_name().to_string_lossy().to_string());
+            }
+        }
+        names.sort();
+        names.join(", ")
+    } else {
+        "<none>".to_string()
+    };
+
+    Err(format!(
+        "new: unsupported starter '{}'; supported starters: {}",
+        starter, supported
+    ))
 }
 
-fn starter_sources(name: &str, starter: &str) -> (&'static str, String) {
-    let module = if starter == "minimal" {
-        "module App {\n}\n"
-    } else {
-        "module App {\n  provide AppController\n  control AppController\n}\n"
-    };
+fn copy_dir_recursive(from: &Path, to: &Path) -> Result<(), String> {
+    fs::create_dir_all(to)
+        .map_err(|err| format!("new: failed creating '{}': {err}", to.display()))?;
 
-    let controller = if starter == "minimal" {
-        "#[injectable]\nclass AppController {\n}\n".to_string()
-    } else {
-        format!(
-            "#[injectable]\n#[controller(\"/\")]\nclass AppController {{\n  #[get(\"/\")]\n  fn hello(res: Result<String, HttpError>): Result<String, HttpError> {{\n    return res\n  }}\n}}\n// project: {name}\n"
-        )
-    };
+    for entry in fs::read_dir(from)
+        .map_err(|err| format!("new: failed reading '{}': {err}", from.display()))?
+    {
+        let entry = entry.map_err(|err| format!("new: failed reading directory entry: {err}"))?;
+        let src_path = entry.path();
+        let dst_path = to.join(entry.file_name());
 
-    (module, controller)
+        if src_path.is_dir() {
+            copy_dir_recursive(&src_path, &dst_path)?;
+        } else {
+            fs::copy(&src_path, &dst_path).map_err(|err| {
+                format!(
+                    "new: failed copying '{}' to '{}': {err}",
+                    src_path.display(),
+                    dst_path.display()
+                )
+            })?;
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -126,6 +132,18 @@ mod tests {
         );
         let base = std::env::temp_dir().join(unique);
         fs::create_dir_all(&base).expect("create base dir");
+        fs::create_dir_all(base.join("templates/starters/api/src"))
+            .expect("create starter template dir");
+        fs::write(
+            base.join("templates/starters/api/src/main.rw"),
+            "module App {\n  provide AppController\n  control AppController\n}\n",
+        )
+        .expect("write starter main");
+        fs::write(
+            base.join("templates/starters/api/src/app.controller.rw"),
+            "#[injectable]\nclass AppController {\n}\n",
+        )
+        .expect("write starter controller");
         let old_cwd = std::env::current_dir().expect("read cwd");
         std::env::set_current_dir(&base).expect("set cwd");
 
@@ -148,6 +166,14 @@ mod tests {
         fs::remove_file(project_path.join("arwa.blueprint.json")).expect("cleanup blueprint");
         fs::remove_dir(project_path.join("src")).expect("cleanup src");
         fs::remove_dir(project_path).expect("cleanup project dir");
+        fs::remove_file(base.join("templates/starters/api/src/main.rw"))
+            .expect("cleanup starter main");
+        fs::remove_file(base.join("templates/starters/api/src/app.controller.rw"))
+            .expect("cleanup starter controller");
+        fs::remove_dir(base.join("templates/starters/api/src")).expect("cleanup starter src");
+        fs::remove_dir(base.join("templates/starters/api")).expect("cleanup starter api");
+        fs::remove_dir(base.join("templates/starters")).expect("cleanup starters");
+        fs::remove_dir(base.join("templates")).expect("cleanup templates");
         fs::remove_dir(base).expect("cleanup base");
     }
 }

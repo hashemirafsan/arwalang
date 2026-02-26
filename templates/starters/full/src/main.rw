@@ -1,0 +1,22 @@
+module App {
+  import AuthModule
+  import DatabaseModule
+  import LoggerModule
+  provide AppController
+  control AppController
+}
+
+module AuthModule {
+  provide AuthService
+  export AuthService
+}
+
+module DatabaseModule {
+  provide DatabaseService
+  export DatabaseService
+}
+
+module LoggerModule {
+  provide LoggerService
+  export LoggerService
+}

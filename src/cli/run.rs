@@ -1,3 +1,5 @@
+use std::fs;
+use std::path::PathBuf;
 use std::process::Command;
 
 use clap::Args;
@@ -10,6 +12,18 @@ pub struct RunArgs {
     #[command(flatten)]
     pub build: BuildArgs,
 
+    /// Host interface for server bind.
+    #[arg(long, default_value = "127.0.0.1")]
+    pub host: String,
+
+    /// Port for server bind.
+    #[arg(long, default_value_t = 3000)]
+    pub port: u16,
+
+    /// Maximum number of served requests before exit.
+    #[arg(long, hide = true)]
+    pub max_requests: Option<usize>,
+
     /// Arguments forwarded to generated executable (use after `--`).
     #[arg(last = true)]
     pub forward_args: Vec<String>,
@@ -17,18 +31,71 @@ pub struct RunArgs {
 
 /// Builds project and runs produced executable.
 pub fn execute_run(args: &RunArgs) -> Result<(), String> {
-    let output = execute_build(&args.build)?;
+    let output = execute_build_for_run(&args.build)?;
+    let addr = format!("{}:{}", args.host, args.port);
 
-    let status = Command::new(&output)
-        .args(&args.forward_args)
+    let mut command = Command::new(&output);
+    command
+        .env("ARWA_RUNTIME_SERVE", "1")
+        .env("ARWA_RUNTIME_ADDR", &addr)
+        .args(&args.forward_args);
+    if let Some(max_requests) = args.max_requests {
+        command.env("ARWA_RUNTIME_MAX_REQUESTS", max_requests.to_string());
+    }
+
+    let status = command
         .status()
         .map_err(|err| format!("run: failed to execute '{}': {err}", output.display()))?;
+
+    cleanup_temp_build_artifacts(&output);
 
     if !status.success() {
         return Err(format!("run: process exited with status {status}"));
     }
 
     Ok(())
+}
+
+fn execute_build_for_run(build_args: &BuildArgs) -> Result<PathBuf, String> {
+    let temp_dist = std::env::temp_dir().join(format!(
+        "arwa-run-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_err(|err| format!("run: clock error while creating temp output: {err}"))?
+            .as_nanos()
+    ));
+    fs::create_dir_all(&temp_dist).map_err(|err| {
+        format!(
+            "run: failed creating temp build dir '{}': {err}",
+            temp_dist.display()
+        )
+    })?;
+
+    let mut run_build_args = build_args.clone();
+    run_build_args.dist = temp_dist;
+    execute_build(&run_build_args)
+}
+
+fn cleanup_temp_build_artifacts(executable: &PathBuf) {
+    let _ = fs::remove_file(executable);
+
+    let object_path = executable.with_extension("o");
+    let _ = fs::remove_file(&object_path);
+
+    if let Some(parent) = executable.parent() {
+        let _ = fs::remove_dir(parent);
+    }
+}
+
+#[cfg(test)]
+fn reserve_free_port() -> u16 {
+    use std::net::TcpListener;
+
+    TcpListener::bind("127.0.0.1:0")
+        .expect("bind ephemeral listener")
+        .local_addr()
+        .expect("read ephemeral listener addr")
+        .port()
 }
 
 #[cfg(test)]
@@ -42,8 +109,32 @@ mod tests {
     use std::fs;
 
     use crate::cli::build::BuildArgs;
+    use crate::cli::cwd_test_lock;
 
-    use super::{execute_build, execute_run, RunArgs};
+    use super::{execute_build, execute_run, reserve_free_port, RunArgs};
+
+    fn request_with_retry(port: u16, path: &str) -> Result<String, String> {
+        let mut response = String::new();
+        for _ in 0..200 {
+            match TcpStream::connect(("127.0.0.1", port)) {
+                Ok(mut stream) => {
+                    let request = format!("GET {path} HTTP/1.1\r\nHost: localhost\r\n\r\n");
+                    stream
+                        .write_all(request.as_bytes())
+                        .map_err(|err| format!("write request failed: {err}"))?;
+                    stream
+                        .shutdown(std::net::Shutdown::Write)
+                        .map_err(|err| format!("shutdown write failed: {err}"))?;
+                    stream
+                        .read_to_string(&mut response)
+                        .map_err(|err| format!("read response failed: {err}"))?;
+                    return Ok(response);
+                }
+                Err(_) => thread::sleep(Duration::from_millis(25)),
+            }
+        }
+        Err("timed out waiting for runtime server".to_string())
+    }
 
     fn minimal_app_source() -> &'static str {
         r#"
@@ -65,6 +156,8 @@ class UserController {
 
     #[test]
     fn run_builds_and_executes_binary() {
+        let _cwd_guard = cwd_test_lock().lock().expect("acquire cwd lock");
+
         let unique = format!(
             "arwa-cli-run-test-{}",
             std::time::SystemTime::now()
@@ -78,28 +171,31 @@ class UserController {
         let input = base.join("main.rw");
         fs::write(&input, minimal_app_source()).expect("write source");
 
-        let dist = base.join("dist");
+        let port = reserve_free_port();
         let args = RunArgs {
             build: BuildArgs {
                 input: Some(input.clone()),
-                dist: dist.clone(),
+                dist: base.join("dist"),
                 name: Some("runapp".to_string()),
             },
+            host: "127.0.0.1".to_string(),
+            port,
+            max_requests: Some(1),
             forward_args: vec![],
         };
 
-        execute_run(&args).expect("run should succeed");
+        let join = thread::spawn(move || execute_run(&args));
+        let response = request_with_retry(port, "/users").expect("request should succeed");
+        assert!(response.starts_with("HTTP/1.1 200 OK"));
 
-        let output = dist.join("runapp");
-        let object = dist.join("runapp.o");
-        if object.exists() {
-            fs::remove_file(object).expect("cleanup object");
-        }
-        if output.exists() {
-            fs::remove_file(output).expect("cleanup output");
-        }
+        let run_result = join.join().expect("join run thread");
+        run_result.expect("run should succeed");
+
+        assert!(
+            !base.join("dist").exists(),
+            "run should not persist dist artifacts"
+        );
         fs::remove_file(input).expect("cleanup input");
-        fs::remove_dir(dist).expect("cleanup dist");
         fs::remove_dir(base).expect("cleanup base");
     }
 
@@ -205,27 +301,29 @@ class UserController {
         fs::write(&input, minimal_app_source()).expect("write source");
 
         let dist = base.join("dist");
+        let port = reserve_free_port();
         let args = RunArgs {
             build: BuildArgs {
                 input: Some(input.clone()),
-                dist: dist.clone(),
+                dist: base.join("dist"),
                 name: Some("runargsapp".to_string()),
             },
+            host: "127.0.0.1".to_string(),
+            port,
+            max_requests: Some(1),
             forward_args: vec!["--example".to_string(), "value".to_string()],
         };
 
-        execute_run(&args).expect("run with forwarded args should succeed");
+        let join = thread::spawn(move || execute_run(&args));
+        let response = request_with_retry(port, "/users").expect("request should succeed");
+        assert!(response.starts_with("HTTP/1.1 200 OK"));
 
-        let output = dist.join("runargsapp");
-        let object = dist.join("runargsapp.o");
-        if object.exists() {
-            fs::remove_file(object).expect("cleanup object");
-        }
-        if output.exists() {
-            fs::remove_file(output).expect("cleanup output");
-        }
+        join.join()
+            .expect("join run thread")
+            .expect("run with forwarded args should succeed");
+
+        assert!(!dist.exists(), "run should not persist dist artifacts");
         fs::remove_file(input).expect("cleanup input");
-        fs::remove_dir(dist).expect("cleanup dist");
         fs::remove_dir(base).expect("cleanup base");
     }
 }
