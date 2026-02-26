@@ -12,13 +12,14 @@ Implement `arwa` command entrypoints for build/check/run workflows.
   - `run`
   - placeholders for `new`, `add`, `fmt`
 - Implemented `arwa build` flow in `src/cli/build.rs`:
-  - source loading
+  - source loading (explicit input or auto-discovered `src/**/*.rw`)
   - phases 1-9 validation pipeline
   - IR generation
   - codegen/link invocation
   - executable output reporting
 - Implemented `arwa check` flow in `src/cli/check.rs`:
   - runs validation-only pipeline (phases 1-9)
+  - supports project source auto-discovery
 - Implemented `arwa run` flow in `src/cli/run.rs`:
   - runs build
   - executes produced binary
@@ -27,6 +28,7 @@ Implement `arwa` command entrypoints for build/check/run workflows.
   - build integration-like test (minimal app -> executable artifact)
   - check integration-like tests (valid + invalid source)
   - run integration-like test (minimal app -> execute binary)
+  - build/check project-discovery tests from `src/` layouts
 - Added CLI error typing + exit-code mapping:
   - compilation/runtime errors -> exit code `1`
   - usage/unsupported command errors -> exit code `2`
@@ -34,7 +36,6 @@ Implement `arwa` command entrypoints for build/check/run workflows.
 ## Current Gaps
 
 - `new`, `add`, and `fmt` are not implemented yet.
-- Build/check currently operate on a single source file, not full project file discovery.
 
 ## Validation Performed
 
@@ -46,4 +47,4 @@ cargo test
 
 ## Next Step
 
-Implement full project discovery for `build`/`check` and complete `new` command scaffolding.
+Complete `new` command scaffolding and add pass-through argument support in `arwa run`.

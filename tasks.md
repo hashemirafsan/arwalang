@@ -848,7 +848,7 @@ Execution policy for this phase:
 - [x] Create `src/cli/build.rs`
 - [x] Define command arguments (optional: output path, optimization level)
 - [x] Implement `run(args: BuildArgs) -> Result<(), Error>`
-  - [ ] Read all `.rw` source files
+  - [x] Read all `.rw` source files
   - [x] Run lexer phase
   - [x] Run parser phase
   - [x] Run resolver phase

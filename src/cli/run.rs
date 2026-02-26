@@ -128,14 +128,14 @@ class UserController {
             .env("ARWA_RUNTIME_SERVE", "1")
             .env("ARWA_RUNTIME_ADDR", addr.to_string())
             .env("ARWA_RUNTIME_MAX_REQUESTS", "1")
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .spawn()
             .expect("spawn generated binary");
 
         let mut response = String::new();
         let mut connected = false;
-        for _ in 0..30 {
+        for _ in 0..200 {
             match TcpStream::connect(addr) {
                 Ok(mut stream) => {
                     connected = true;
@@ -148,7 +148,19 @@ class UserController {
                     stream.read_to_string(&mut response).expect("read response");
                     break;
                 }
-                Err(_) => thread::sleep(Duration::from_millis(25)),
+                Err(_) => {
+                    if let Some(status) = child.try_wait().expect("poll child status") {
+                        let output = child
+                            .wait_with_output()
+                            .expect("collect child output after early exit");
+                        panic!(
+                            "server exited early with status {status}; stdout='{}' stderr='{}'",
+                            String::from_utf8_lossy(&output.stdout),
+                            String::from_utf8_lossy(&output.stderr)
+                        );
+                    }
+                    thread::sleep(Duration::from_millis(25));
+                }
             }
         }
 

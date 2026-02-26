@@ -35,8 +35,8 @@ pub struct BuildArgs {
 
 /// Executes full build pipeline and returns output binary path.
 pub fn execute_build(args: &BuildArgs) -> Result<PathBuf, String> {
-    let input = resolve_input_path(args.input.clone())?;
-    let ast = load_and_validate_source(&input)?;
+    let inputs = resolve_input_paths(args.input.clone())?;
+    let ast = load_and_validate_sources(&inputs)?;
 
     let mut ir = IrGenerator::new()
         .generate_ir(&ast)
@@ -49,8 +49,27 @@ pub fn execute_build(args: &BuildArgs) -> Result<PathBuf, String> {
     codegen::compile_to_executable(&ir, &args.dist).map_err(|err| format!("codegen: {err}"))
 }
 
-/// Loads and validates source through phases 1-9.
-pub fn load_and_validate_source(path: &Path) -> Result<SourceFile, String> {
+/// Loads and validates multiple source files through phases 1-9.
+pub fn load_and_validate_sources(paths: &[PathBuf]) -> Result<SourceFile, String> {
+    if paths.is_empty() {
+        return Err("io: no source files provided".to_string());
+    }
+
+    let mut merged = SourceFile {
+        path: paths[0].clone(),
+        items: Vec::new(),
+    };
+
+    for path in paths {
+        let ast = parse_source_file(path)?;
+        merged.items.extend(ast.items);
+    }
+
+    validate_semantics(&merged)?;
+    Ok(merged)
+}
+
+fn parse_source_file(path: &Path) -> Result<SourceFile, String> {
     let source = fs::read_to_string(path)
         .map_err(|err| format!("io: failed reading '{}': {err}", path.display()))?;
 
@@ -65,23 +84,59 @@ pub fn load_and_validate_source(path: &Path) -> Result<SourceFile, String> {
         .parse_source_file()
         .map_err(|errors| format_stage_errors("parser", &errors))?;
 
-    validate_semantics(&ast)?;
     Ok(ast)
 }
 
-/// Resolves effective input path from CLI option or standard defaults.
-pub fn resolve_input_path(input: Option<PathBuf>) -> Result<PathBuf, String> {
+/// Resolves effective source file paths from CLI option or project defaults.
+pub fn resolve_input_paths(input: Option<PathBuf>) -> Result<Vec<PathBuf>, String> {
     if let Some(path) = input {
-        return Ok(path);
+        return Ok(vec![path]);
     }
 
-    for candidate in [PathBuf::from("src/main.rw"), PathBuf::from("main.rw")] {
+    let mut src_files = discover_rw_files(&PathBuf::from("src"))?;
+    if !src_files.is_empty() {
+        src_files.sort();
+        return Ok(src_files);
+    }
+
+    for candidate in [PathBuf::from("main.rw"), PathBuf::from("src/main.rw")] {
         if candidate.exists() {
-            return Ok(candidate);
+            return Ok(vec![candidate]);
         }
     }
 
     Err("io: no input file provided and none of 'src/main.rw' or 'main.rw' exists".to_string())
+}
+
+fn discover_rw_files(root: &Path) -> Result<Vec<PathBuf>, String> {
+    if !root.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut files = Vec::new();
+    visit_dir_for_rw(root, &mut files)?;
+    Ok(files)
+}
+
+fn visit_dir_for_rw(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), String> {
+    for entry in fs::read_dir(dir)
+        .map_err(|err| format!("io: failed reading directory '{}': {err}", dir.display()))?
+    {
+        let entry = entry.map_err(|err| format!("io: failed reading directory entry: {err}"))?;
+        let path = entry.path();
+
+        if path.is_dir() {
+            visit_dir_for_rw(&path, out)?;
+        } else if path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| ext == "rw")
+            .unwrap_or(false)
+        {
+            out.push(path);
+        }
+    }
+    Ok(())
 }
 
 fn validate_semantics(ast: &SourceFile) -> Result<(), String> {
@@ -132,6 +187,7 @@ fn format_stage_errors<T: Display>(stage: &str, errors: &[T]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::env;
     use std::fs;
     use std::path::PathBuf;
 
@@ -189,5 +245,72 @@ class UserController {
         fs::remove_file(&input).expect("cleanup input");
         fs::remove_dir(&dist).expect("cleanup dist");
         fs::remove_dir(&base).expect("cleanup base");
+    }
+
+    #[test]
+    fn build_discovers_sources_from_src_directory_by_default() {
+        let unique = format!(
+            "arwa-cli-build-discovery-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock should be valid")
+                .as_nanos()
+        );
+        let base = std::env::temp_dir().join(unique);
+        let src = base.join("src");
+        fs::create_dir_all(&src).expect("create src dir");
+
+        fs::write(
+            src.join("main.rw"),
+            r#"
+module App {
+  provide UserController
+  control UserController
+}
+"#,
+        )
+        .expect("write main module");
+
+        fs::write(
+            src.join("user_controller.rw"),
+            r#"
+#[injectable]
+#[controller("/users")]
+class UserController {
+  #[get("/")]
+  fn list(res: Result<Int, HttpError>): Result<Int, HttpError> {
+    return res
+  }
+}
+"#,
+        )
+        .expect("write controller");
+
+        let old_cwd = env::current_dir().expect("read cwd");
+        env::set_current_dir(&base).expect("set cwd to test project");
+
+        let args = BuildArgs {
+            input: None,
+            dist: PathBuf::from("dist"),
+            name: Some("discoverapp".to_string()),
+        };
+
+        let output = execute_build(&args).expect("build should succeed from discovered sources");
+        assert!(output.exists());
+
+        let object = base.join("dist/discoverapp.o");
+        if object.exists() {
+            fs::remove_file(object).expect("cleanup object");
+        }
+        if output.exists() {
+            fs::remove_file(&output).expect("cleanup output");
+        }
+
+        env::set_current_dir(old_cwd).expect("restore cwd");
+        fs::remove_file(src.join("main.rw")).expect("cleanup main source");
+        fs::remove_file(src.join("user_controller.rw")).expect("cleanup controller source");
+        fs::remove_dir(base.join("dist")).expect("cleanup dist");
+        fs::remove_dir(src).expect("cleanup src dir");
+        fs::remove_dir(base).expect("cleanup base");
     }
 }

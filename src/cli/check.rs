@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::build::{load_and_validate_source, resolve_input_path};
+use super::build::{load_and_validate_sources, resolve_input_paths};
 
 /// CLI options for `arwa check`.
 #[derive(Debug, Clone, Args)]
@@ -12,13 +12,14 @@ pub struct CheckArgs {
 
 /// Executes validation-only compiler pipeline (phases 1-9).
 pub fn execute_check(args: &CheckArgs) -> Result<(), String> {
-    let input = resolve_input_path(args.input.clone())?;
-    let _ = load_and_validate_source(&input)?;
+    let inputs = resolve_input_paths(args.input.clone())?;
+    let _ = load_and_validate_sources(&inputs)?;
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
+    use std::env;
     use std::fs;
 
     use super::{execute_check, CheckArgs};
@@ -93,6 +94,58 @@ class UserController {
         );
 
         fs::remove_file(input).expect("cleanup input");
+        fs::remove_dir(base).expect("cleanup base");
+    }
+
+    #[test]
+    fn check_discovers_sources_from_src_directory() {
+        let unique = format!(
+            "arwa-cli-check-discovery-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock should be valid")
+                .as_nanos()
+        );
+        let base = std::env::temp_dir().join(unique);
+        let src = base.join("src");
+        fs::create_dir_all(&src).expect("create src dir");
+
+        fs::write(
+            src.join("main.rw"),
+            r#"
+module App {
+  provide UserController
+  control UserController
+}
+"#,
+        )
+        .expect("write main module");
+
+        fs::write(
+            src.join("user_controller.rw"),
+            r#"
+#[injectable]
+#[controller("/users")]
+class UserController {
+  #[get("/")]
+  fn list(res: Result<Int, HttpError>): Result<Int, HttpError> {
+    return res
+  }
+}
+"#,
+        )
+        .expect("write controller");
+
+        let old_cwd = env::current_dir().expect("read cwd");
+        env::set_current_dir(&base).expect("set cwd");
+
+        let args = CheckArgs { input: None };
+        execute_check(&args).expect("check should succeed from discovered sources");
+
+        env::set_current_dir(old_cwd).expect("restore cwd");
+        fs::remove_file(src.join("main.rw")).expect("cleanup main source");
+        fs::remove_file(src.join("user_controller.rw")).expect("cleanup controller source");
+        fs::remove_dir(src).expect("cleanup src dir");
         fs::remove_dir(base).expect("cleanup base");
     }
 }
