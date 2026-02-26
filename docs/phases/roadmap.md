@@ -22,7 +22,7 @@ This file tracks planned and completed implementation work across phases.
 | 7 | Module Graph | done | Module dependency graph + visibility checks |
 | 8 | Route Table | done | Static route registry and route validation |
 | 9 | Lifecycle Pipeline | done | Static middleware/guard/pipe/interceptor chains |
-| 10 | IR & Codegen | planned | IR lowering + Cranelift-first native output |
+| 10 | IR & Codegen | in_progress | IR lowering + Cranelift-first native output |
 | 11 | Error Reporting | planned | Structured diagnostics + human/JSON output |
 | 12 | CLI | planned | `arwa` command implementations |
 | 13 | Scaffolding & Blueprint | planned | Template registry and project generation |

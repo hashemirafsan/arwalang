@@ -689,24 +689,24 @@ Execution policy for this phase:
 - [ ] Treat LLVM work as optional and non-blocking for v1 delivery.
 
 ### 10.1 Define Intermediate Representation
-- [ ] Create `src/ir/mod.rs`
-- [ ] Define `IrModule` struct
-- [ ] Define `IrFunction` struct
-  - [ ] Name, parameters, return type, body
-- [ ] Define `IrBlock` struct (basic block)
-- [ ] Define `IrInstruction` enum
-  - [ ] Load, Store, Call, Return, Branch, etc.
-- [ ] Define `IrValue` enum (constants, variables, etc.)
-- [ ] Define `IrType` enum
+- [x] Create `src/ir/mod.rs`
+- [x] Define `IrModule` struct
+- [x] Define `IrFunction` struct
+  - [x] Name, parameters, return type, body
+- [x] Define `IrBlock` struct (basic block)
+- [x] Define `IrInstruction` enum
+  - [x] Load, Store, Call, Return, Branch, etc.
+- [x] Define `IrValue` enum (constants, variables, etc.)
+- [x] Define `IrType` enum
 
 ### 10.2 Lower AST to IR
-- [ ] Implement `IrGenerator` struct
-- [ ] Implement `generate_ir(ast: &SourceFile) -> Result<IrModule, IrError>`
-- [ ] Lower module declarations to IR
+- [x] Implement `IrGenerator` struct
+- [x] Implement `generate_ir(ast: &SourceFile) -> Result<IrModule, IrError>`
+- [x] Lower module declarations to IR
 - [ ] Lower class declarations to struct definitions
-- [ ] Lower methods to IR functions
-- [ ] Lower expressions to IR instructions
-- [ ] Lower statements to IR instructions
+- [x] Lower methods to IR functions
+- [x] Lower expressions to IR instructions
+- [x] Lower statements to IR instructions
 
 ### 10.3 Generate Static Tables in IR
 - [ ] Generate DI registry as static data
@@ -717,15 +717,15 @@ Execution policy for this phase:
   - [ ] Per-route array of lifecycle function pointers
 
 ### 10.4 Implement Cranelift Backend
-- [ ] Create `src/codegen/mod.rs`
+- [x] Create `src/codegen/mod.rs`
 - [ ] Create `src/codegen/cranelift.rs`
 - [ ] Add Cranelift dependencies to Cargo.toml
   - [ ] cranelift-codegen
   - [ ] cranelift-frontend
   - [ ] cranelift-module
   - [ ] cranelift-object
-- [ ] Implement `CraneliftBackend` struct
-- [ ] Implement `compile(ir: &IrModule) -> Result<Vec<u8>, CodegenError>`
+- [x] Implement `CraneliftBackend` struct
+- [~] Implement `compile(ir: &IrModule) -> Result<Vec<u8>, CodegenError>`
   - [ ] Initialize Cranelift ISA and module
   - [ ] Translate IR functions to Cranelift IR
   - [ ] Compile to machine code
