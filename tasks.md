@@ -685,7 +685,7 @@ This document breaks down the ArwaLang compiler implementation into granular tas
 ## 10. Phase 10 - IR & Code Generation
 
 Execution policy for this phase:
-- [ ] Complete Cranelift end-to-end path first (IR lowering -> object generation -> runtime linking -> executable output).
+- [x] Complete Cranelift end-to-end path first (IR lowering -> object generation -> runtime linking -> executable output).
 - [ ] Treat LLVM work as optional and non-blocking for v1 delivery.
 
 ### 10.1 Define Intermediate Representation
@@ -733,8 +733,8 @@ Execution policy for this phase:
 - [x] Phase gate: do not start LLVM tasks until Cranelift-based executable generation succeeds for minimal app.
 
 ### 10.5 Link Runtime
-- [~] Create minimal Rust runtime crate
-  - [ ] HTTP server (TCP listener, HTTP/1.1 parser)
+- [x] Create minimal Rust runtime crate
+  - [x] HTTP server (TCP listener, HTTP/1.1 parser)
   - [x] Route dispatcher (reads static route table)
   - [x] DI container (reads static DI registry)
   - [x] JSON serializer/deserializer
@@ -760,7 +760,7 @@ Execution policy for this phase:
 - [x] Unit test: generate static route table
 - [x] Integration test: compile minimal program to binary
 - [x] Integration test: run generated binary
-- [ ] Integration test: verify HTTP server responds
+- [x] Integration test: verify HTTP server responds
 
 ---
 

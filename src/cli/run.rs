@@ -28,11 +28,17 @@ pub fn execute_run(args: &RunArgs) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+    use std::io::{Read, Write};
+    use std::net::{TcpListener, TcpStream};
+    use std::process::{Command, Stdio};
+    use std::thread;
+    use std::time::Duration;
+
     use std::fs;
 
     use crate::cli::build::BuildArgs;
 
-    use super::{execute_run, RunArgs};
+    use super::{execute_build, execute_run, RunArgs};
 
     fn minimal_app_source() -> &'static str {
         r#"
@@ -80,6 +86,80 @@ class UserController {
 
         let output = dist.join("runapp");
         let object = dist.join("runapp.o");
+        if object.exists() {
+            fs::remove_file(object).expect("cleanup object");
+        }
+        if output.exists() {
+            fs::remove_file(output).expect("cleanup output");
+        }
+        fs::remove_file(input).expect("cleanup input");
+        fs::remove_dir(dist).expect("cleanup dist");
+        fs::remove_dir(base).expect("cleanup base");
+    }
+
+    #[test]
+    fn generated_binary_serves_http_response() {
+        let unique = format!(
+            "arwa-cli-http-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock should be valid")
+                .as_nanos()
+        );
+        let base = std::env::temp_dir().join(unique);
+        fs::create_dir_all(&base).expect("create temp dir");
+
+        let input = base.join("main.rw");
+        fs::write(&input, minimal_app_source()).expect("write source");
+
+        let dist = base.join("dist");
+        let output = execute_build(&BuildArgs {
+            input: Some(input.clone()),
+            dist: dist.clone(),
+            name: Some("httpapp".to_string()),
+        })
+        .expect("build should succeed");
+
+        let probe = TcpListener::bind("127.0.0.1:0").expect("bind probe listener");
+        let addr = probe.local_addr().expect("read probe addr");
+        drop(probe);
+
+        let mut child = Command::new(&output)
+            .env("ARWA_RUNTIME_SERVE", "1")
+            .env("ARWA_RUNTIME_ADDR", addr.to_string())
+            .env("ARWA_RUNTIME_MAX_REQUESTS", "1")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("spawn generated binary");
+
+        let mut response = String::new();
+        let mut connected = false;
+        for _ in 0..30 {
+            match TcpStream::connect(addr) {
+                Ok(mut stream) => {
+                    connected = true;
+                    stream
+                        .write_all(b"GET /users HTTP/1.1\r\nHost: localhost\r\n\r\n")
+                        .expect("write request");
+                    stream
+                        .shutdown(std::net::Shutdown::Write)
+                        .expect("shutdown write");
+                    stream.read_to_string(&mut response).expect("read response");
+                    break;
+                }
+                Err(_) => thread::sleep(Duration::from_millis(25)),
+            }
+        }
+
+        assert!(connected, "server never accepted connection");
+        assert!(response.starts_with("HTTP/1.1 200 OK"));
+        assert!(response.contains("handler:UserController.list"));
+
+        let status = child.wait().expect("wait for child");
+        assert!(status.success(), "server process failed: {status}");
+
+        let object = dist.join("httpapp.o");
         if object.exists() {
             fs::remove_file(object).expect("cleanup object");
         }

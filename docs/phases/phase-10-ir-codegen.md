@@ -41,6 +41,9 @@ Define compiler IR and start lowering validated AST into IR, then wire a Craneli
   - runtime unit tests for route resolution, DI lookup, and dispatch behavior
   - runtime staticlib export for executable entry (`arwa_runtime_start`)
   - linked payload readers for compiler-emitted JSON table blobs
+  - runtime-owned bootstrap model that builds dispatchable state from linked payloads
+  - minimal HTTP server helpers (TCP listener + HTTP/1.1 request parsing/response formatting)
+  - bounded serve-loop execution path used by generated binaries
 - Added linker utilities in `src/codegen/linker.rs`:
   - write object output into dist paths
   - build runtime static library via `cargo build --manifest-path runtime/Cargo.toml --release`
@@ -52,14 +55,15 @@ Define compiler IR and start lowering validated AST into IR, then wire a Craneli
   - `compile_to_object` (IR -> Cranelift object -> `dist/<name>.o`)
   - `compile_to_executable` (object -> linked `dist/<name>`)
   - unit test that verifies object artifact output path creation
+- Added generated-binary HTTP integration coverage in `src/cli/run.rs`:
+  - builds executable, starts env-gated runtime server, issues request, validates HTTP 200 response
 
 ## Current Gaps
 
 - No full control-flow lowering yet (branching/basic-block graph still minimal).
-- Runtime startup currently loads linked table metadata but does not yet execute an HTTP server lifecycle.
+- Runtime startup currently uses env-gated HTTP serving mode and bounded request loops; production-grade server lifecycle management is still pending.
 - `call` instruction lowering is currently placeholder-only.
 - Cross-platform linker behavior is not finalized.
-- Runtime crate currently provides dispatch/table plumbing only (no TCP listener or HTTP parser yet).
 
 ## Validation Performed
 
@@ -71,4 +75,4 @@ cargo test
 
 ## Next Step
 
-Complete runtime bootstrap integration and remove temporary bootstrap linker shim.
+Build end-to-end generated-binary HTTP response tests and finalize runtime serving lifecycle defaults.
