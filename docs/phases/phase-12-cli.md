@@ -10,6 +10,7 @@ Implement `arwa` command entrypoints for build/check/run workflows.
   - `build`
   - `check`
   - `run`
+  - `version`
   - implemented `new`
   - implemented `add`
   - implemented `fmt`
@@ -53,11 +54,16 @@ Implement `arwa` command entrypoints for build/check/run workflows.
 - Added CLI error typing + exit-code mapping:
   - compilation/runtime errors -> exit code `1`
   - usage/unsupported command errors -> exit code `2`
+- Added user-facing CLI error enrichment:
+  - missing input project hints
+  - filesystem path hints
+  - missing linker/toolchain dependency hints
 
 ## Current Gaps
 
 - `fmt` currently uses lightweight line-based formatting (not AST-driven).
 - `add` template copy path is limited by currently bundled template coverage.
+- `version` command currently prints package version only (no build metadata).
 
 ## Validation Performed
 
@@ -69,4 +75,4 @@ cargo test
 
 ## Next Step
 
-Harden `add`/`fmt` behaviors with richer template bundles and stricter formatting semantics.
+Improve template coverage for `add` and move formatter toward parser-aware formatting.

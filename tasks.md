@@ -832,6 +832,7 @@ Execution policy for this phase:
 - [x] Add `clap` dependency with derive feature
 - [x] Define main CLI struct with clap
 - [x] Define subcommands enum
+- [x] Add `version` command support
 
 ### 12.2 Implement `arwa new` Command
 - [x] Create `src/cli/new.rs`
@@ -903,13 +904,13 @@ Execution policy for this phase:
   - [x] Write back to file (or check mode)
 
 ### 12.8 CLI Error Handling
-- [ ] Implement user-friendly error messages
-- [ ] Use appropriate exit codes
+- [x] Implement user-friendly error messages
+- [x] Use appropriate exit codes
   - [x] 0 for success
   - [x] 1 for compilation errors
   - [x] 2 for CLI usage errors
-- [ ] Handle file system errors gracefully
-- [ ] Handle missing dependencies
+- [x] Handle file system errors gracefully
+- [x] Handle missing dependencies
 
 ### 12.9 CLI Tests
 - [x] Integration test: `arwa new` creates project

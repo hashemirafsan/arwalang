@@ -31,6 +31,7 @@ enum Commands {
     Build(BuildArgs),
     Check(CheckArgs),
     Run(RunArgs),
+    Version,
     New(NewArgs),
     Add(AddArgs),
     Fmt(FmtArgs),
@@ -72,28 +73,38 @@ pub fn run() -> Result<(), CliError> {
 
     match cli.command {
         Some(Commands::Build(args)) => {
-            let output = execute_build(&args).map_err(CliError::Compilation)?;
+            let output = execute_build(&args)
+                .map_err(|err| CliError::Compilation(enrich_error_message(&err)))?;
             println!("build: wrote executable {}", output.display());
             Ok(())
         }
         Some(Commands::Check(args)) => {
-            execute_check(&args).map_err(CliError::Compilation)?;
+            execute_check(&args)
+                .map_err(|err| CliError::Compilation(enrich_error_message(&err)))?;
             println!("check: validation passed");
             Ok(())
         }
-        Some(Commands::Run(args)) => execute_run(&args).map_err(CliError::Runtime),
+        Some(Commands::Run(args)) => {
+            execute_run(&args).map_err(|err| CliError::Runtime(enrich_error_message(&err)))
+        }
+        Some(Commands::Version) => {
+            println!("arwa {}", env!("CARGO_PKG_VERSION"));
+            Ok(())
+        }
         Some(Commands::New(args)) => {
-            let created = execute_new(&args).map_err(CliError::Runtime)?;
+            let created =
+                execute_new(&args).map_err(|err| CliError::Runtime(enrich_error_message(&err)))?;
             println!("new: created project {}", created.display());
             Ok(())
         }
         Some(Commands::Add(args)) => {
-            execute_add(&args).map_err(CliError::Runtime)?;
+            execute_add(&args).map_err(|err| CliError::Runtime(enrich_error_message(&err)))?;
             println!("add: feature '{}' applied", args.feature);
             Ok(())
         }
         Some(Commands::Fmt(args)) => {
-            let changed = execute_fmt(&args).map_err(CliError::Runtime)?;
+            let changed =
+                execute_fmt(&args).map_err(|err| CliError::Runtime(enrich_error_message(&err)))?;
             if args.check {
                 println!("fmt: all files are properly formatted");
             } else {
@@ -102,16 +113,39 @@ pub fn run() -> Result<(), CliError> {
             Ok(())
         }
         None => Err(CliError::Usage(
-            "usage: arwa <build|check|run|new|add|fmt>".to_string(),
+            "usage: arwa <build|check|run|version|new|add|fmt>".to_string(),
         )),
     }
+}
+
+fn enrich_error_message(message: &str) -> String {
+    if message.contains("io: no input file provided") {
+        return format!(
+            "{message}\nhelp: provide an input path or run inside a project with .rw files under src/"
+        );
+    }
+
+    if message.contains("failed to invoke linker")
+        || message.contains("failed to build runtime crate")
+        || message.contains("native isa setup failed")
+    {
+        return format!(
+            "{message}\nhelp: ensure Rust toolchain and a system C linker are installed and available in PATH"
+        );
+    }
+
+    if message.contains("No such file or directory") {
+        return format!("{message}\nhelp: verify file paths and current working directory");
+    }
+
+    message.to_string()
 }
 
 #[cfg(test)]
 mod tests {
     use clap::Parser;
 
-    use super::{Cli, CliError, Commands};
+    use super::{enrich_error_message, Cli, CliError, Commands};
 
     #[test]
     fn parses_build_command() {
@@ -132,6 +166,12 @@ mod tests {
         let cli =
             Cli::try_parse_from(["arwa", "run", "main.rw"]).expect("cli parsing should succeed");
         assert!(matches!(cli.command, Some(Commands::Run(_))));
+    }
+
+    #[test]
+    fn parses_version_command() {
+        let cli = Cli::try_parse_from(["arwa", "version"]).expect("parse version");
+        assert!(matches!(cli.command, Some(Commands::Version)));
     }
 
     #[test]
@@ -158,5 +198,11 @@ mod tests {
     fn parses_fmt_command() {
         let cli = Cli::try_parse_from(["arwa", "fmt", "--check"]).expect("parse fmt");
         assert!(matches!(cli.command, Some(Commands::Fmt(_))));
+    }
+
+    #[test]
+    fn enriches_missing_input_error_with_help() {
+        let msg = enrich_error_message("io: no input file provided and none found");
+        assert!(msg.contains("help:"));
     }
 }
