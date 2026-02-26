@@ -827,22 +827,22 @@ Execution policy for this phase:
 ## 12. Phase 12 - CLI
 
 ### 12.1 Setup CLI Framework
-- [ ] Create `src/cli/mod.rs`
-- [ ] Create `src/main.rs`
-- [ ] Add `clap` dependency with derive feature
-- [ ] Define main CLI struct with clap
-- [ ] Define subcommands enum
+- [x] Create `src/cli/mod.rs`
+- [x] Create `src/main.rs`
+- [x] Add `clap` dependency with derive feature
+- [x] Define main CLI struct with clap
+- [x] Define subcommands enum
 
 ### 12.2 Implement `arwa new` Command
-- [ ] Create `src/cli/new.rs`
-- [ ] Define command arguments (project name, optional template)
-- [ ] Implement `run(args: NewArgs) -> Result<(), Error>`
-  - [ ] Validate project name
-  - [ ] Create project directory
-  - [ ] Copy template files from bundled templates
-  - [ ] Generate `arwa.blueprint.json`
-  - [ ] Initialize basic project structure
-  - [ ] Print success message with next steps
+- [x] Create `src/cli/new.rs`
+- [x] Define command arguments (project name, optional template)
+- [x] Implement `run(args: NewArgs) -> Result<(), Error>`
+  - [x] Validate project name
+  - [x] Create project directory
+  - [x] Copy template files from bundled templates
+  - [x] Generate `arwa.blueprint.json`
+  - [x] Initialize basic project structure
+  - [x] Print success message with next steps
 
 ### 12.3 Implement `arwa build` Command
 - [x] Create `src/cli/build.rs`
@@ -877,7 +877,7 @@ Execution policy for this phase:
 - [x] Implement `run(args: RunArgs) -> Result<(), Error>`
   - [x] Run `arwa build`
   - [x] If build succeeds, execute output binary
-  - [ ] Pass through command-line arguments
+  - [x] Pass through command-line arguments
   - [x] Stream output to stdout/stderr
 
 ### 12.6 Implement `arwa add` Command
@@ -912,7 +912,7 @@ Execution policy for this phase:
 - [ ] Handle missing dependencies
 
 ### 12.9 CLI Tests
-- [ ] Integration test: `arwa new` creates project
+- [x] Integration test: `arwa new` creates project
 - [x] Integration test: `arwa build` compiles minimal project
 - [x] Integration test: `arwa check` validates without codegen
 - [x] Integration test: `arwa run` executes binary

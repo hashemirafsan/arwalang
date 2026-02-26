@@ -22,6 +22,8 @@ mod tests {
     use std::env;
     use std::fs;
 
+    use crate::cli::cwd_test_lock;
+
     use super::{execute_check, CheckArgs};
 
     fn minimal_app_source() -> &'static str {
@@ -99,6 +101,8 @@ class UserController {
 
     #[test]
     fn check_discovers_sources_from_src_directory() {
+        let _guard = cwd_test_lock().lock().expect("acquire cwd lock");
+
         let unique = format!(
             "arwa-cli-check-discovery-test-{}",
             std::time::SystemTime::now()

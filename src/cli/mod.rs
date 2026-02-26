@@ -7,10 +7,14 @@ pub mod run;
 
 use std::fmt::{Display, Formatter};
 
+#[cfg(test)]
+use std::sync::{Mutex, OnceLock};
+
 use clap::{Parser, Subcommand};
 
 use self::build::{execute_build, BuildArgs};
 use self::check::{execute_check, CheckArgs};
+use self::new::{execute_new, NewArgs};
 use self::run::{execute_run, RunArgs};
 
 #[derive(Debug, Parser)]
@@ -25,7 +29,7 @@ enum Commands {
     Build(BuildArgs),
     Check(CheckArgs),
     Run(RunArgs),
-    New,
+    New(NewArgs),
     Add,
     Fmt,
 }
@@ -60,6 +64,12 @@ impl Display for CliError {
     }
 }
 
+#[cfg(test)]
+pub(crate) fn cwd_test_lock() -> &'static Mutex<()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+}
+
 pub fn run() -> Result<(), CliError> {
     let cli = Cli::parse();
 
@@ -75,9 +85,11 @@ pub fn run() -> Result<(), CliError> {
             Ok(())
         }
         Some(Commands::Run(args)) => execute_run(&args).map_err(CliError::Runtime),
-        Some(Commands::New) => Err(CliError::Unsupported(
-            "new: not implemented yet".to_string(),
-        )),
+        Some(Commands::New(args)) => {
+            let created = execute_new(&args).map_err(CliError::Runtime)?;
+            println!("new: created project {}", created.display());
+            Ok(())
+        }
         Some(Commands::Add) => Err(CliError::Unsupported(
             "add: not implemented yet".to_string(),
         )),
@@ -115,6 +127,13 @@ mod tests {
         let cli =
             Cli::try_parse_from(["arwa", "run", "main.rw"]).expect("cli parsing should succeed");
         assert!(matches!(cli.command, Some(Commands::Run(_))));
+    }
+
+    #[test]
+    fn parses_new_command_with_name() {
+        let cli =
+            Cli::try_parse_from(["arwa", "new", "myapp"]).expect("cli parsing should succeed");
+        assert!(matches!(cli.command, Some(Commands::New(_))));
     }
 
     #[test]

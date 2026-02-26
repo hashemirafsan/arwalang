@@ -10,7 +10,14 @@ Implement `arwa` command entrypoints for build/check/run workflows.
   - `build`
   - `check`
   - `run`
-  - placeholders for `new`, `add`, `fmt`
+  - implemented `new`
+  - placeholders for `add`, `fmt`
+- Implemented `arwa new` flow in `src/cli/new.rs`:
+  - project name validation
+  - starter validation (`api`, `minimal`)
+  - creates project directory and `src/` layout
+  - writes starter `.rw` files
+  - generates `arwa.blueprint.json`
 - Implemented `arwa build` flow in `src/cli/build.rs`:
   - source loading (explicit input or auto-discovered `src/**/*.rw`)
   - phases 1-9 validation pipeline
@@ -23,19 +30,22 @@ Implement `arwa` command entrypoints for build/check/run workflows.
 - Implemented `arwa run` flow in `src/cli/run.rs`:
   - runs build
   - executes produced binary
+  - forwards args to generated executable
 - Added CLI tests:
   - command argument parsing tests
   - build integration-like test (minimal app -> executable artifact)
   - check integration-like tests (valid + invalid source)
   - run integration-like test (minimal app -> execute binary)
   - build/check project-discovery tests from `src/` layouts
+  - new command project-generation test
+  - run forwarded-arg behavior test
 - Added CLI error typing + exit-code mapping:
   - compilation/runtime errors -> exit code `1`
   - usage/unsupported command errors -> exit code `2`
 
 ## Current Gaps
 
-- `new`, `add`, and `fmt` are not implemented yet.
+- `add` and `fmt` are not implemented yet.
 
 ## Validation Performed
 
@@ -47,4 +57,4 @@ cargo test
 
 ## Next Step
 
-Complete `new` command scaffolding and add pass-through argument support in `arwa run`.
+Implement `add` and `fmt` command workflows with template/formatting integration tests.

@@ -9,6 +9,10 @@ use super::build::{execute_build, BuildArgs};
 pub struct RunArgs {
     #[command(flatten)]
     pub build: BuildArgs,
+
+    /// Arguments forwarded to generated executable (use after `--`).
+    #[arg(last = true)]
+    pub forward_args: Vec<String>,
 }
 
 /// Builds project and runs produced executable.
@@ -16,6 +20,7 @@ pub fn execute_run(args: &RunArgs) -> Result<(), String> {
     let output = execute_build(&args.build)?;
 
     let status = Command::new(&output)
+        .args(&args.forward_args)
         .status()
         .map_err(|err| format!("run: failed to execute '{}': {err}", output.display()))?;
 
@@ -80,6 +85,7 @@ class UserController {
                 dist: dist.clone(),
                 name: Some("runapp".to_string()),
             },
+            forward_args: vec![],
         };
 
         execute_run(&args).expect("run should succeed");
@@ -172,6 +178,46 @@ class UserController {
         assert!(status.success(), "server process failed: {status}");
 
         let object = dist.join("httpapp.o");
+        if object.exists() {
+            fs::remove_file(object).expect("cleanup object");
+        }
+        if output.exists() {
+            fs::remove_file(output).expect("cleanup output");
+        }
+        fs::remove_file(input).expect("cleanup input");
+        fs::remove_dir(dist).expect("cleanup dist");
+        fs::remove_dir(base).expect("cleanup base");
+    }
+
+    #[test]
+    fn run_accepts_forwarded_args() {
+        let unique = format!(
+            "arwa-cli-run-forward-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock should be valid")
+                .as_nanos()
+        );
+        let base = std::env::temp_dir().join(unique);
+        fs::create_dir_all(&base).expect("create temp dir");
+
+        let input = base.join("main.rw");
+        fs::write(&input, minimal_app_source()).expect("write source");
+
+        let dist = base.join("dist");
+        let args = RunArgs {
+            build: BuildArgs {
+                input: Some(input.clone()),
+                dist: dist.clone(),
+                name: Some("runargsapp".to_string()),
+            },
+            forward_args: vec!["--example".to_string(), "value".to_string()],
+        };
+
+        execute_run(&args).expect("run with forwarded args should succeed");
+
+        let output = dist.join("runargsapp");
+        let object = dist.join("runargsapp.o");
         if object.exists() {
             fs::remove_file(object).expect("cleanup object");
         }

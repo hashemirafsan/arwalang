@@ -191,6 +191,8 @@ mod tests {
     use std::fs;
     use std::path::PathBuf;
 
+    use crate::cli::cwd_test_lock;
+
     use super::{execute_build, BuildArgs};
 
     fn minimal_app_source() -> &'static str {
@@ -249,6 +251,8 @@ class UserController {
 
     #[test]
     fn build_discovers_sources_from_src_directory_by_default() {
+        let _guard = cwd_test_lock().lock().expect("acquire cwd lock");
+
         let unique = format!(
             "arwa-cli-build-discovery-test-{}",
             std::time::SystemTime::now()
