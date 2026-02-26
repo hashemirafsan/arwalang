@@ -493,192 +493,192 @@ This document breaks down the ArwaLang compiler implementation into granular tas
 ## 7. Phase 7 - Module Graph Builder & Validator
 
 ### 7.1 Implement Module Graph Structure
-- [ ] Create `src/modules/mod.rs`
-- [ ] Create `src/modules/graph.rs`
-- [ ] Define `ModuleGraph` struct
-  - [ ] Nodes: modules (name, imports, exports, providers, controllers)
-  - [ ] Edges: import relationships
-- [ ] Define `Module` struct
-- [ ] Implement `add_module(module: Module)`
-- [ ] Implement `add_import(from: String, to: String)`
+- [x] Create `src/modules/mod.rs`
+- [x] Create `src/modules/graph.rs`
+- [x] Define `ModuleGraph` struct
+  - [x] Nodes: modules (name, imports, exports, providers, controllers)
+  - [x] Edges: import relationships
+- [x] Define `Module` struct
+- [x] Implement `add_module(module: Module)`
+- [x] Implement `add_import(from: String, to: String)`
 
 ### 7.2 Build Module Graph from AST
-- [ ] Implement `ModuleGraphBuilder` struct
-- [ ] Implement `build(ast: &SourceFile) -> Result<ModuleGraph, Vec<ModuleError>>`
-- [ ] Collect all module declarations
-- [ ] For each module:
-  - [ ] Record imports
-  - [ ] Record providers
-  - [ ] Record controllers
-  - [ ] Record exports
-  - [ ] Add module node
-- [ ] Build import edges between modules
+- [x] Implement `ModuleGraphBuilder` struct
+- [x] Implement `build(ast: &SourceFile) -> Result<ModuleGraph, Vec<ModuleError>>`
+- [x] Collect all module declarations
+- [x] For each module:
+  - [x] Record imports
+  - [x] Record providers
+  - [x] Record controllers
+  - [x] Record exports
+  - [x] Add module node
+- [x] Build import edges between modules
 
 ### 7.3 Validate Module Graph
-- [ ] Implement `validate_module_graph(graph: &ModuleGraph) -> Result<(), Vec<ModuleError>>`
-- [ ] Check for unknown imports
-  - [ ] Verify imported module exists
-- [ ] Check for circular imports
-  - [ ] Implement cycle detection
-  - [ ] Report full import cycle
-- [ ] Validate controller dependencies
-  - [ ] Check controller can access all required services
-  - [ ] Services must be provided in same module or imported
+- [x] Implement `validate_module_graph(graph: &ModuleGraph) -> Result<(), Vec<ModuleError>>`
+- [x] Check for unknown imports
+  - [x] Verify imported module exists
+- [x] Check for circular imports
+  - [x] Implement cycle detection
+  - [x] Report full import cycle
+- [x] Validate controller dependencies
+  - [x] Check controller can access all required services
+  - [x] Services must be provided in same module or imported
 
 ### 7.4 Validate Module Provider Visibility
-- [ ] Check symbols are exported from source module
-- [ ] Error when consuming private provider from another module
-- [ ] Validate export declarations match provided symbols
+- [x] Check symbols are exported from source module
+- [x] Error when consuming private provider from another module
+- [x] Validate export declarations match provided symbols
 
 ### 7.5 Module Graph Error Handling
-- [ ] Define `ModuleError` enum using thiserror
-  - [ ] UnknownImport variant (MOD001)
-  - [ ] CircularImport variant (MOD002)
-  - [ ] UnsatisfiedController variant (MOD003)
-  - [ ] PrivateProvider variant (MOD004)
-- [ ] Include span information in all errors
-- [ ] Collect all module errors
+- [x] Define `ModuleError` enum using thiserror
+  - [x] UnknownImport variant (MOD001)
+  - [x] CircularImport variant (MOD002)
+  - [x] UnsatisfiedController variant (MOD003)
+  - [x] PrivateProvider variant (MOD004)
+- [x] Include span information in all errors
+- [x] Collect all module errors
 
 ### 7.6 Module Graph Tests
-- [ ] Unit test: build simple module graph
-- [ ] Unit test: detect unknown import
-- [ ] Unit test: detect circular import (A→B→A)
-- [ ] Unit test: detect longer import cycles
-- [ ] Unit test: validate controller dependencies satisfied
-- [ ] Unit test: error on private provider access
-- [ ] Unit test: validate exports match providers
-- [ ] Unit test: multi-module app with proper imports
+- [x] Unit test: build simple module graph
+- [x] Unit test: detect unknown import
+- [x] Unit test: detect circular import (A→B→A)
+- [x] Unit test: detect longer import cycles
+- [x] Unit test: validate controller dependencies satisfied
+- [x] Unit test: error on private provider access
+- [x] Unit test: validate exports match providers
+- [x] Unit test: multi-module app with proper imports
 
 ---
 
 ## 8. Phase 8 - Route Table Builder & Validator
 
 ### 8.1 Implement Route Table Structure
-- [ ] Create `src/routes/mod.rs`
-- [ ] Create `src/routes/registry.rs`
-- [ ] Define `RouteTable` struct
-- [ ] Define `Route` struct
-  - [ ] HTTP method (GET, POST, PUT, DELETE, PATCH)
-  - [ ] Full path (prefix + method path)
-  - [ ] Handler (fully qualified method name)
-  - [ ] Path parameters
-  - [ ] Span
-- [ ] Define `HttpMethod` enum
-- [ ] Implement `add_route(route: Route)`
-- [ ] Implement `get_routes() -> &[Route]`
+- [x] Create `src/routes/mod.rs`
+- [x] Create `src/routes/registry.rs`
+- [x] Define `RouteTable` struct
+- [x] Define `Route` struct
+  - [x] HTTP method (GET, POST, PUT, DELETE, PATCH)
+  - [x] Full path (prefix + method path)
+  - [x] Handler (fully qualified method name)
+  - [x] Path parameters
+  - [x] Span
+- [x] Define `HttpMethod` enum
+- [x] Implement `add_route(route: Route)`
+- [x] Implement `get_routes() -> &[Route]`
 
 ### 8.2 Build Route Table from AST
-- [ ] Implement `RouteTableBuilder` struct
-- [ ] Implement `build(ast: &SourceFile) -> Result<RouteTable, Vec<RouteError>>`
-- [ ] Find all classes with `#[controller(prefix)]`
-- [ ] For each controller:
-  - [ ] Extract controller path prefix
-  - [ ] Find all methods with HTTP method annotations
-  - [ ] For each handler method:
-    - [ ] Extract HTTP method (get, post, put, delete, patch)
-    - [ ] Extract method path
-    - [ ] Construct full path (prefix + method path)
-    - [ ] Record route entry
+- [x] Implement `RouteTableBuilder` struct
+- [x] Implement `build(ast: &SourceFile) -> Result<RouteTable, Vec<RouteError>>`
+- [x] Find all classes with `#[controller(prefix)]`
+- [x] For each controller:
+  - [x] Extract controller path prefix
+  - [x] Find all methods with HTTP method annotations
+  - [x] For each handler method:
+    - [x] Extract HTTP method (get, post, put, delete, patch)
+    - [x] Extract method path
+    - [x] Construct full path (prefix + method path)
+    - [x] Record route entry
 
 ### 8.3 Parse Route Paths
-- [ ] Implement route path parser
-- [ ] Extract path parameters (`:paramName` syntax)
-- [ ] Validate path syntax
-- [ ] Store parameter names for validation
+- [x] Implement route path parser
+- [x] Extract path parameters (`:paramName` syntax)
+- [x] Validate path syntax
+- [x] Store parameter names for validation
 
 ### 8.4 Validate Route Table
-- [ ] Implement `validate_route_table(table: &RouteTable) -> Result<(), Vec<RouteError>>`
-- [ ] Check for duplicate routes
-  - [ ] Same HTTP method + exact path → error
-  - [ ] Report both conflicting handlers
-- [ ] Validate path parameters
-  - [ ] Each `:param` in path must have `#[param("name")]` on method
-  - [ ] Each `#[param("name")]` must have corresponding `:name` in path
-  - [ ] Error on unbound path parameters
-  - [ ] Error on unused param annotations
+- [x] Implement `validate_route_table(table: &RouteTable) -> Result<(), Vec<RouteError>>`
+- [x] Check for duplicate routes
+  - [x] Same HTTP method + exact path → error
+  - [x] Report both conflicting handlers
+- [x] Validate path parameters
+  - [x] Each `:param` in path must have `#[param("name")]` on method
+  - [x] Each `#[param("name")]` must have corresponding `:name` in path
+  - [x] Error on unbound path parameters
+  - [x] Error on unused param annotations
 
 ### 8.5 Route Error Handling
-- [ ] Define `RouteError` enum using thiserror
-  - [ ] DuplicateRoute variant (ROUTE001)
-  - [ ] UnboundPathParam variant (ROUTE002)
-  - [ ] UnusedParamAnnotation variant (ROUTE003)
-- [ ] Include span information in all errors
-- [ ] Collect all route errors
+- [x] Define `RouteError` enum using thiserror
+  - [x] DuplicateRoute variant (ROUTE001)
+  - [x] UnboundPathParam variant (ROUTE002)
+  - [x] UnusedParamAnnotation variant (ROUTE003)
+- [x] Include span information in all errors
+- [x] Collect all route errors
 
 ### 8.6 Route Table Tests
-- [ ] Unit test: build simple route table
-- [ ] Unit test: construct full paths from prefix + method path
-- [ ] Unit test: detect duplicate routes
-- [ ] Unit test: validate path parameters
-- [ ] Unit test: error on unbound path param
-- [ ] Unit test: error on unused param annotation
-- [ ] Unit test: multiple controllers with different prefixes
-- [ ] Unit test: all HTTP methods (GET, POST, PUT, DELETE, PATCH)
+- [x] Unit test: build simple route table
+- [x] Unit test: construct full paths from prefix + method path
+- [x] Unit test: detect duplicate routes
+- [x] Unit test: validate path parameters
+- [x] Unit test: error on unbound path param
+- [x] Unit test: error on unused param annotation
+- [x] Unit test: multiple controllers with different prefixes
+- [x] Unit test: all HTTP methods (GET, POST, PUT, DELETE, PATCH)
 
 ---
 
 ## 9. Phase 9 - Lifecycle Pipeline Builder
 
 ### 9.1 Implement Pipeline Structure
-- [ ] Create `src/lifecycle/mod.rs`
-- [ ] Create `src/lifecycle/pipeline.rs`
-- [ ] Define `Pipeline` struct
-  - [ ] Middleware list
-  - [ ] Guards list
-  - [ ] Pipes list
-  - [ ] Interceptors list
-  - [ ] Exception filters list
-- [ ] Define `PipelineStage` enum
-- [ ] Define `LifecycleComponent` struct (name, type, span)
+- [x] Create `src/lifecycle/mod.rs`
+- [x] Create `src/lifecycle/pipeline.rs`
+- [x] Define `Pipeline` struct
+  - [x] Middleware list
+  - [x] Guards list
+  - [x] Pipes list
+  - [x] Interceptors list
+  - [x] Exception filters list
+- [x] Define `PipelineStage` enum
+- [x] Define `LifecycleComponent` struct (name, type, span)
 
 ### 9.2 Build Pipelines from Annotations
-- [ ] Implement `PipelineBuilder` struct
-- [ ] Implement `build(route_table: &RouteTable, ast: &SourceFile) -> Result<HashMap<Route, Pipeline>, Vec<LifecycleError>>`
-- [ ] For each route:
-  - [ ] Find corresponding controller class
-  - [ ] Find corresponding handler method
-  - [ ] Collect class-level lifecycle annotations
-  - [ ] Collect method-level lifecycle annotations
-  - [ ] Build ordered pipeline
+- [x] Implement `PipelineBuilder` struct
+- [x] Implement `build(route_table: &RouteTable, ast: &SourceFile) -> Result<HashMap<Route, Pipeline>, Vec<LifecycleError>>`
+- [x] For each route:
+  - [x] Find corresponding controller class
+  - [x] Find corresponding handler method
+  - [x] Collect class-level lifecycle annotations
+  - [x] Collect method-level lifecycle annotations
+  - [x] Build ordered pipeline
 
 ### 9.3 Assemble Pipeline Order
-- [ ] Extract `#[use_guards(...)]` from class level
-- [ ] Extract `#[use_guards(...)]` from method level
-- [ ] Combine: class-level first, then method-level
-- [ ] Repeat for interceptors and pipes
-- [ ] Maintain fixed order: Middleware → Guards → Pipes → Handler → Interceptors → Filters
+- [x] Extract `#[use_guards(...)]` from class level
+- [x] Extract `#[use_guards(...)]` from method level
+- [x] Combine: class-level first, then method-level
+- [x] Repeat for interceptors and pipes
+- [x] Maintain fixed order: Middleware → Guards → Pipes → Handler → Interceptors → Filters
 
 ### 9.4 Validate Pipeline Components
-- [ ] Implement `validate_pipelines(pipelines: &HashMap<Route, Pipeline>) -> Result<(), Vec<LifecycleError>>`
-- [ ] For each guard class:
-  - [ ] Check implements `Guard` interface
-  - [ ] Check is `#[injectable]`
-- [ ] For each interceptor class:
-  - [ ] Check implements `Interceptor` interface
-  - [ ] Check is `#[injectable]`
-- [ ] For each pipe class:
-  - [ ] Check implements `Pipe` interface
-  - [ ] Check is `#[injectable]`
+- [x] Implement `validate_pipelines(pipelines: &HashMap<Route, Pipeline>) -> Result<(), Vec<LifecycleError>>`
+- [x] For each guard class:
+  - [x] Check implements `Guard` interface
+  - [x] Check is `#[injectable]`
+- [x] For each interceptor class:
+  - [x] Check implements `Interceptor` interface
+  - [x] Check is `#[injectable]`
+- [x] For each pipe class:
+  - [x] Check implements `Pipe` interface
+  - [x] Check is `#[injectable]`
 
 ### 9.5 Lifecycle Error Handling
-- [ ] Define `LifecycleError` enum using thiserror
-  - [ ] InvalidGuard variant (LC001)
-  - [ ] InvalidInterceptor variant (LC002)
-  - [ ] InvalidPipe variant (LC003)
-  - [ ] NotInjectable variant (LC004)
-- [ ] Include span information in all errors
-- [ ] Collect all lifecycle errors
+- [x] Define `LifecycleError` enum using thiserror
+  - [x] InvalidGuard variant (LC001)
+  - [x] InvalidInterceptor variant (LC002)
+  - [x] InvalidPipe variant (LC003)
+  - [x] NotInjectable variant (LC004)
+- [x] Include span information in all errors
+- [x] Collect all lifecycle errors
 
 ### 9.6 Lifecycle Pipeline Tests
-- [ ] Unit test: build simple pipeline
-- [ ] Unit test: combine class and method level annotations
-- [ ] Unit test: maintain correct order
-- [ ] Unit test: error on invalid guard (wrong interface)
-- [ ] Unit test: error on invalid interceptor
-- [ ] Unit test: error on invalid pipe
-- [ ] Unit test: error on non-injectable component
-- [ ] Unit test: multiple guards applied correctly
-- [ ] Unit test: empty pipeline (no lifecycle components)
+- [x] Unit test: build simple pipeline
+- [x] Unit test: combine class and method level annotations
+- [x] Unit test: maintain correct order
+- [x] Unit test: error on invalid guard (wrong interface)
+- [x] Unit test: error on invalid interceptor
+- [x] Unit test: error on invalid pipe
+- [x] Unit test: error on non-injectable component
+- [x] Unit test: multiple guards applied correctly
+- [x] Unit test: empty pipeline (no lifecycle components)
 
 ---
 

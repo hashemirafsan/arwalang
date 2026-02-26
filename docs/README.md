@@ -18,6 +18,9 @@ This directory contains phase-oriented implementation documentation for the Arwa
 - `docs/phases/phase-04-type-checker.md`: implementation record for Phase 4.
 - `docs/phases/phase-05-annotation-processor.md`: implementation record for Phase 5.
 - `docs/phases/phase-06-di-graph.md`: implementation record for Phase 6.
+- `docs/phases/phase-07-module-graph.md`: implementation record for Phase 7.
+- `docs/phases/phase-08-route-table.md`: implementation record for Phase 8.
+- `docs/phases/phase-09-lifecycle-pipeline.md`: implementation record for Phase 9.
 - `docs/phases/template.md`: template to document upcoming phases.
 
 ## Update Policy

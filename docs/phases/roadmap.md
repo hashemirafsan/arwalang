@@ -19,9 +19,9 @@ This file tracks planned and completed implementation work across phases.
 | 4 | Type Checker | done | Strict type rules and serializability checks |
 | 5 | Annotation Processor | done | Annotation validation and semantic metadata |
 | 6 | DI Graph | done | Provider graph + DI validation rules |
-| 7 | Module Graph | planned | Module dependency graph + visibility checks |
-| 8 | Route Table | planned | Static route registry and route validation |
-| 9 | Lifecycle Pipeline | planned | Static middleware/guard/pipe/interceptor chains |
+| 7 | Module Graph | done | Module dependency graph + visibility checks |
+| 8 | Route Table | done | Static route registry and route validation |
+| 9 | Lifecycle Pipeline | done | Static middleware/guard/pipe/interceptor chains |
 | 10 | IR & Codegen | planned | IR lowering + Cranelift-first native output |
 | 11 | Error Reporting | planned | Structured diagnostics + human/JSON output |
 | 12 | CLI | planned | `arwa` command implementations |

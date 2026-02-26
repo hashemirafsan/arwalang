@@ -243,7 +243,7 @@ pub struct Block {
 }
 
 /// Source span for AST and diagnostics.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Span {
     pub file: PathBuf,
     pub line_start: u32,
