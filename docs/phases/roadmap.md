@@ -17,7 +17,7 @@ This file tracks planned and completed implementation work across phases.
 | 2 | Parser & AST | done | AST definitions and recursive-descent parser |
 | 3 | Name Resolution | done | Symbol tables and name binding pass |
 | 4 | Type Checker | done | Strict type rules and serializability checks |
-| 5 | Annotation Processor | planned | Annotation validation and semantic metadata |
+| 5 | Annotation Processor | done | Annotation validation and semantic metadata |
 | 6 | DI Graph | planned | Provider graph + DI validation rules |
 | 7 | Module Graph | planned | Module dependency graph + visibility checks |
 | 8 | Route Table | planned | Static route registry and route validation |

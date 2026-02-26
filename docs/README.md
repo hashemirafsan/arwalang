@@ -16,6 +16,7 @@ This directory contains phase-oriented implementation documentation for the Arwa
 - `docs/phases/phase-02-parser-ast.md`: implementation record for Phase 2.
 - `docs/phases/phase-03-name-resolution.md`: implementation record for Phase 3.
 - `docs/phases/phase-04-type-checker.md`: implementation record for Phase 4.
+- `docs/phases/phase-05-annotation-processor.md`: implementation record for Phase 5.
 - `docs/phases/template.md`: template to document upcoming phases.
 
 ## Update Policy

@@ -352,69 +352,69 @@ This document breaks down the ArwaLang compiler implementation into granular tas
 ## 5. Phase 5 - Annotation Processor
 
 ### 5.1 Implement Annotation Registry
-- [ ] Create `src/annotations/mod.rs`
-- [ ] Define `AnnotationRegistry` struct
-- [ ] Define known annotation metadata
-  - [ ] Name, valid targets, required/optional arguments
-- [ ] Implement `register_annotation(metadata: AnnotationMetadata)`
-- [ ] Register all built-in annotations
+- [x] Create `src/annotations/mod.rs`
+- [x] Define `AnnotationRegistry` struct
+- [x] Define known annotation metadata
+  - [x] Name, valid targets, required/optional arguments
+- [x] Implement `register_annotation(metadata: AnnotationMetadata)`
+- [x] Register all built-in annotations
 
 ### 5.2 Implement Annotation Validation
-- [ ] Implement `AnnotationProcessor` struct
-- [ ] Implement `process_source_file(ast: &SourceFile) -> Result<(), Vec<AnnotationError>>`
-- [ ] Implement `validate_annotation(ann: &Annotation, target: AnnotationTarget)`
-  - [ ] Check annotation name is known
-  - [ ] Check annotation target is valid
-  - [ ] Check required arguments are present
-  - [ ] Check argument types are correct
+- [x] Implement `AnnotationProcessor` struct
+- [x] Implement `process_source_file(ast: &SourceFile) -> Result<(), Vec<AnnotationError>>`
+- [x] Implement `validate_annotation(ann: &Annotation, target: AnnotationTarget)`
+  - [x] Check annotation name is known
+  - [x] Check annotation target is valid
+  - [x] Check required arguments are present
+  - [x] Check argument types are correct
 
 ### 5.3 Validate Specific Annotations
-- [ ] Validate `#[injectable]`
-  - [ ] Check scope argument is valid (singleton/request/transient)
-  - [ ] Default to singleton if omitted
-- [ ] Validate `#[controller(path)]`
-  - [ ] Check path argument is a string literal
-  - [ ] Check applied to class only
-- [ ] Validate HTTP method annotations (`#[get]`, `#[post]`, etc.)
-  - [ ] Check path argument is a string literal
-  - [ ] Check applied to method only
-- [ ] Validate parameter annotations (`#[param]`, `#[query]`, `#[body]`, `#[header]`)
-  - [ ] Check applied to method parameters only
-  - [ ] Validate `#[body]` appears at most once per method
-  - [ ] Validate `#[param("id")]` matches route path parameter
-- [ ] Validate lifecycle annotations (`#[use_guards]`, `#[use_interceptors]`, `#[use_pipes]`)
-  - [ ] Check arguments are class names
-  - [ ] Validate class references exist
+- [x] Validate `#[injectable]`
+  - [x] Check scope argument is valid (singleton/request/transient)
+  - [x] Default to singleton if omitted
+- [x] Validate `#[controller(path)]`
+  - [x] Check path argument is a string literal
+  - [x] Check applied to class only
+- [x] Validate HTTP method annotations (`#[get]`, `#[post]`, etc.)
+  - [x] Check path argument is a string literal
+  - [x] Check applied to method only
+- [x] Validate parameter annotations (`#[param]`, `#[query]`, `#[body]`, `#[header]`)
+  - [x] Check applied to method parameters only
+  - [x] Validate `#[body]` appears at most once per method
+  - [x] Validate `#[param("id")]` matches route path parameter
+- [x] Validate lifecycle annotations (`#[use_guards]`, `#[use_interceptors]`, `#[use_pipes]`)
+  - [x] Check arguments are class names
+  - [x] Validate class references exist
 
 ### 5.4 Route Parameter Binding Validation
-- [ ] Extract route path from controller and method annotations
-- [ ] Parse route path for parameters (`:paramName`)
-- [ ] Check each `#[param("name")]` matches a route parameter
-- [ ] Check each route parameter has a corresponding `#[param]`
-- [ ] Error on unbound route parameters
-- [ ] Error on unused param annotations
+- [x] Extract route path from controller and method annotations
+- [x] Parse route path for parameters (`:paramName`)
+- [x] Check each `#[param("name")]` matches a route parameter
+- [x] Check each route parameter has a corresponding `#[param]`
+- [x] Error on unbound route parameters
+- [x] Error on unused param annotations
 
 ### 5.5 Annotation Error Handling
-- [ ] Define `AnnotationError` enum using thiserror
-  - [ ] UnknownAnnotation variant
-  - [ ] MissingArgument variant
-  - [ ] InvalidArgument variant
-  - [ ] UnboundRouteParam variant
-  - [ ] DuplicateBody variant
-  - [ ] InvalidTarget variant
-- [ ] Include span information in all errors
-- [ ] Collect all annotation errors
+- [x] Define `AnnotationError` enum using thiserror
+  - [x] UnknownAnnotation variant
+  - [x] MissingArgument variant
+  - [x] InvalidArgument variant
+  - [x] UnboundRouteParam variant
+  - [x] DuplicateBody variant
+  - [x] InvalidTarget variant
+- [x] Include span information in all errors
+- [x] Collect all annotation errors
 
 ### 5.6 Annotation Processor Tests
-- [ ] Unit test: validate known annotations
-- [ ] Unit test: error on unknown annotation
-- [ ] Unit test: validate required arguments
-- [ ] Unit test: validate injectable scope values
-- [ ] Unit test: validate controller path
-- [ ] Unit test: validate route parameter binding
-- [ ] Unit test: error on duplicate @body
-- [ ] Unit test: error on unbound route param
-- [ ] Unit test: validate lifecycle annotations
+- [x] Unit test: validate known annotations
+- [x] Unit test: error on unknown annotation
+- [x] Unit test: validate required arguments
+- [x] Unit test: validate injectable scope values
+- [x] Unit test: validate controller path
+- [x] Unit test: validate route parameter binding
+- [x] Unit test: error on duplicate @body
+- [x] Unit test: error on unbound route param
+- [x] Unit test: validate lifecycle annotations
 
 ---
 
