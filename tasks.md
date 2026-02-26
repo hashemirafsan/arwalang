@@ -106,126 +106,126 @@ This document breaks down the ArwaLang compiler implementation into granular tas
 ## 2. Phase 2 - Parser & AST
 
 ### 2.1 Define AST Node Types
-- [ ] Create `src/parser/mod.rs`
-- [ ] Create `src/parser/ast.rs`
-  - [ ] Define `SourceFile` struct
-  - [ ] Define `TopLevelItem` enum (Module, Class, Interface, Struct, Enum, Import)
-  - [ ] Define `ModuleDecl` struct
-  - [ ] Define `ProviderBinding` enum (Simple, Aliased)
-  - [ ] Define `ClassDecl` struct
-  - [ ] Define `InterfaceDecl` struct
-  - [ ] Define `StructDecl` struct
-  - [ ] Define `EnumDecl` struct
-  - [ ] Define `ConstructorDecl` struct
-  - [ ] Define `MethodDecl` struct
-  - [ ] Define `FieldDecl` struct
-  - [ ] Define `Param` struct
-  - [ ] Define `Annotation` struct
-  - [ ] Define `AnnotationArg` enum (Positional, Named)
-  - [ ] Define `TypeExpr` enum (Named, Generic, Result, Option)
-  - [ ] Define `Expr` enum (all expression types)
-  - [ ] Define `Stmt` enum (Let, Return, Expr, If)
-  - [ ] Define `Block` struct
-  - [ ] Define `BinOp` and `UnaryOp` enums
-  - [ ] Ensure all nodes have `Span` field
-  - [ ] Implement Debug traits for all AST nodes
+- [x] Create `src/parser/mod.rs`
+- [x] Create `src/parser/ast.rs`
+  - [x] Define `SourceFile` struct
+  - [x] Define `TopLevelItem` enum (Module, Class, Interface, Struct, Enum, Import)
+  - [x] Define `ModuleDecl` struct
+  - [x] Define `ProviderBinding` enum (Simple, Aliased)
+  - [x] Define `ClassDecl` struct
+  - [x] Define `InterfaceDecl` struct
+  - [x] Define `StructDecl` struct
+  - [x] Define `EnumDecl` struct
+  - [x] Define `ConstructorDecl` struct
+  - [x] Define `MethodDecl` struct
+  - [x] Define `FieldDecl` struct
+  - [x] Define `Param` struct
+  - [x] Define `Annotation` struct
+  - [x] Define `AnnotationArg` enum (Positional, Named)
+  - [x] Define `TypeExpr` enum (Named, Generic, Result, Option)
+  - [x] Define `Expr` enum (all expression types)
+  - [x] Define `Stmt` enum (Let, Return, Expr, If)
+  - [x] Define `Block` struct
+  - [x] Define `BinOp` and `UnaryOp` enums
+  - [x] Ensure all nodes have `Span` field
+  - [x] Implement Debug traits for all AST nodes
 
 ### 2.2 Implement Parser Core
-- [ ] Create `src/parser/parser.rs`
-  - [ ] Define `Parser` struct with token stream and position
-  - [ ] Implement `new(tokens: Vec<Token>) -> Parser`
-  - [ ] Implement `peek() -> &Token`
-  - [ ] Implement `advance() -> Token`
-  - [ ] Implement `expect(TokenType) -> Result<Token, ParseError>`
-  - [ ] Implement `match_token(TokenType) -> bool`
+- [x] Create `src/parser/parser.rs`
+  - [x] Define `Parser` struct with token stream and position
+  - [x] Implement `new(tokens: Vec<Token>) -> Parser`
+  - [x] Implement `peek() -> &Token`
+  - [x] Implement `advance() -> Token`
+  - [x] Implement `expect(TokenType) -> Result<Token, ParseError>`
+  - [x] Implement `match_token(TokenType) -> bool`
 
 ### 2.3 Implement Top-Level Parsing
-- [ ] Implement `parse_source_file() -> Result<SourceFile, Vec<ParseError>>`
-- [ ] Implement `parse_top_level_item() -> Result<TopLevelItem, ParseError>`
-- [ ] Implement `parse_import() -> Result<ImportDecl, ParseError>`
-- [ ] Implement `parse_module() -> Result<ModuleDecl, ParseError>`
-  - [ ] Parse `import` statements within module
-  - [ ] Parse `provide` bindings (simple and aliased)
-  - [ ] Parse `control` declarations
-  - [ ] Parse `export` declarations
+- [x] Implement `parse_source_file() -> Result<SourceFile, Vec<ParseError>>`
+- [x] Implement `parse_top_level_item() -> Result<TopLevelItem, ParseError>`
+- [x] Implement `parse_import() -> Result<ImportDecl, ParseError>`
+- [x] Implement `parse_module() -> Result<ModuleDecl, ParseError>`
+  - [x] Parse `import` statements within module
+  - [x] Parse `provide` bindings (simple and aliased)
+  - [x] Parse `control` declarations
+  - [x] Parse `export` declarations
 
 ### 2.4 Implement Type Parsing
-- [ ] Implement `parse_type_expr() -> Result<TypeExpr, ParseError>`
-  - [ ] Parse simple types (Int, String, Bool, etc.)
-  - [ ] Parse generic types (List<T>, Map<K,V>)
-  - [ ] Parse Result<T, E>
-  - [ ] Parse Option<T>
-  - [ ] Handle nested generics
+- [x] Implement `parse_type_expr() -> Result<TypeExpr, ParseError>`
+  - [x] Parse simple types (Int, String, Bool, etc.)
+  - [x] Parse generic types (List<T>, Map<K,V>)
+  - [x] Parse Result<T, E>
+  - [x] Parse Option<T>
+  - [x] Handle nested generics
 
 ### 2.5 Implement Annotation Parsing
-- [ ] Implement `parse_annotations() -> Result<Vec<Annotation>, ParseError>`
-  - [ ] Parse `#[name]` syntax
-  - [ ] Parse `#[name(arg1, arg2)]` with positional args
-  - [ ] Parse `#[name(key1 = value1, key2 = value2)]` with named args
-  - [ ] Handle multiple annotations on same item
+- [x] Implement `parse_annotations() -> Result<Vec<Annotation>, ParseError>`
+  - [x] Parse `#[name]` syntax
+  - [x] Parse `#[name(arg1, arg2)]` with positional args
+  - [x] Parse `#[name(key1 = value1, key2 = value2)]` with named args
+  - [x] Handle multiple annotations on same item
 
 ### 2.6 Implement Class/Interface/Struct Parsing
-- [ ] Implement `parse_class() -> Result<ClassDecl, ParseError>`
-  - [ ] Parse class annotations
-  - [ ] Parse class name
-  - [ ] Parse `implements` clause
-  - [ ] Parse constructor with `constructor` keyword
-  - [ ] Parse `private` modifier on constructor params
-  - [ ] Parse methods
-  - [ ] Parse fields
-- [ ] Implement `parse_interface() -> Result<InterfaceDecl, ParseError>`
-- [ ] Implement `parse_struct() -> Result<StructDecl, ParseError>`
-- [ ] Implement `parse_enum() -> Result<EnumDecl, ParseError>`
+- [x] Implement `parse_class() -> Result<ClassDecl, ParseError>`
+  - [x] Parse class annotations
+  - [x] Parse class name
+  - [x] Parse `implements` clause
+  - [x] Parse constructor with `constructor` keyword
+  - [x] Parse `private` modifier on constructor params
+  - [x] Parse methods
+  - [x] Parse fields
+- [x] Implement `parse_interface() -> Result<InterfaceDecl, ParseError>`
+- [x] Implement `parse_struct() -> Result<StructDecl, ParseError>`
+- [x] Implement `parse_enum() -> Result<EnumDecl, ParseError>`
 
 ### 2.7 Implement Method/Function Parsing
-- [ ] Implement `parse_method() -> Result<MethodDecl, ParseError>`
-  - [ ] Parse method annotations
-  - [ ] Parse method name
-  - [ ] Parse parameter list
-  - [ ] Parse return type
-  - [ ] Parse method body (block)
+- [x] Implement `parse_method() -> Result<MethodDecl, ParseError>`
+  - [x] Parse method annotations
+  - [x] Parse method name
+  - [x] Parse parameter list
+  - [x] Parse return type
+  - [x] Parse method body (block)
 
 ### 2.8 Implement Expression Parsing
-- [ ] Implement `parse_expr() -> Result<Expr, ParseError>`
-- [ ] Implement `parse_primary() -> Result<Expr, ParseError>`
-  - [ ] Parse literals (int, float, string, bool, null)
-  - [ ] Parse identifiers
-  - [ ] Parse parenthesized expressions
-- [ ] Implement `parse_call() -> Result<Expr, ParseError>`
-- [ ] Implement `parse_field_access() -> Result<Expr, ParseError>`
-- [ ] Implement operator precedence parsing
-  - [ ] Parse binary operators with correct precedence
-  - [ ] Parse unary operators
-- [ ] Implement `parse_block() -> Result<Block, ParseError>`
+- [x] Implement `parse_expr() -> Result<Expr, ParseError>`
+- [x] Implement `parse_primary() -> Result<Expr, ParseError>`
+  - [x] Parse literals (int, float, string, bool, null)
+  - [x] Parse identifiers
+  - [x] Parse parenthesized expressions
+- [x] Implement `parse_call() -> Result<Expr, ParseError>`
+- [x] Implement `parse_field_access() -> Result<Expr, ParseError>`
+- [x] Implement operator precedence parsing
+  - [x] Parse binary operators with correct precedence
+  - [x] Parse unary operators
+- [x] Implement `parse_block() -> Result<Block, ParseError>`
 
 ### 2.9 Implement Statement Parsing
-- [ ] Implement `parse_stmt() -> Result<Stmt, ParseError>`
-- [ ] Implement `parse_let_stmt() -> Result<Stmt, ParseError>`
-- [ ] Implement `parse_return_stmt() -> Result<Stmt, ParseError>`
-- [ ] Implement `parse_if_stmt() -> Result<Stmt, ParseError>`
-- [ ] Implement expression statements
+- [x] Implement `parse_stmt() -> Result<Stmt, ParseError>`
+- [x] Implement `parse_let_stmt() -> Result<Stmt, ParseError>`
+- [x] Implement `parse_return_stmt() -> Result<Stmt, ParseError>`
+- [x] Implement `parse_if_stmt() -> Result<Stmt, ParseError>`
+- [x] Implement expression statements
 
 ### 2.10 Parser Error Handling
-- [ ] Define `ParseError` enum using thiserror
-  - [ ] UnexpectedToken variant
-  - [ ] UnexpectedEof variant
-  - [ ] InvalidSyntax variant
-- [ ] Implement error recovery (synchronization points)
-- [ ] Collect multiple errors before stopping
-- [ ] Include span information in all errors
+- [x] Define `ParseError` enum using thiserror
+  - [x] UnexpectedToken variant
+  - [x] UnexpectedEof variant
+  - [x] InvalidSyntax variant
+- [x] Implement error recovery (synchronization points)
+- [x] Collect multiple errors before stopping
+- [x] Include span information in all errors
 
 ### 2.11 Parser Tests
-- [ ] Unit test: parse simple module
-- [ ] Unit test: parse class with constructor and methods
-- [ ] Unit test: parse interface
-- [ ] Unit test: parse struct
-- [ ] Unit test: parse annotations with various argument forms
-- [ ] Unit test: parse generic types
-- [ ] Unit test: parse nested expressions
-- [ ] Unit test: parse all statement types
-- [ ] Unit test: error recovery on invalid syntax
-- [ ] Unit test: multiple errors collected
-- [ ] Unit test: `private` constructor params
+- [x] Unit test: parse simple module
+- [x] Unit test: parse class with constructor and methods
+- [x] Unit test: parse interface
+- [x] Unit test: parse struct
+- [x] Unit test: parse annotations with various argument forms
+- [x] Unit test: parse generic types
+- [x] Unit test: parse nested expressions
+- [x] Unit test: parse all statement types
+- [x] Unit test: error recovery on invalid syntax
+- [x] Unit test: multiple errors collected
+- [x] Unit test: `private` constructor params
 
 ---
 

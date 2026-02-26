@@ -14,7 +14,7 @@ This file tracks planned and completed implementation work across phases.
 |---|---|---|---|
 | 0 | Project Setup | done | Rust workspace, structure, CI/tooling baseline |
 | 1 | Lexer | done | Token model, lexer engine, lexer tests |
-| 2 | Parser & AST | planned | AST definitions and recursive-descent parser |
+| 2 | Parser & AST | done | AST definitions and recursive-descent parser |
 | 3 | Name Resolution | planned | Symbol tables and name binding pass |
 | 4 | Type Checker | planned | Strict type rules and serializability checks |
 | 5 | Annotation Processor | planned | Annotation validation and semantic metadata |

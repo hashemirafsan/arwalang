@@ -13,6 +13,7 @@ This directory contains phase-oriented implementation documentation for the Arwa
 - `docs/phases/roadmap.md`: phase-by-phase plan and status snapshot.
 - `docs/phases/phase-00-project-setup.md`: implementation record for Phase 0.
 - `docs/phases/phase-01-lexer.md`: implementation record for Phase 1.
+- `docs/phases/phase-02-parser-ast.md`: implementation record for Phase 2.
 - `docs/phases/template.md`: template to document upcoming phases.
 
 ## Update Policy
