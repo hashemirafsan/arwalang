@@ -1,0 +1,1244 @@
+# ArwaLang Compiler - Development Tasks
+
+This document breaks down the ArwaLang compiler implementation into granular tasks organized by phase.
+
+## Status Legend
+- `[ ]` Not started
+- `[~]` In progress
+- `[x]` Completed
+- `[!]` Blocked
+
+## Project Management Directives
+
+- `requirements.md` is the canonical source of truth (brain).
+- `tasks.md` is the execution tracker (project manager).
+- If any task item conflicts with `requirements.md`, follow `requirements.md` and then update this file.
+- Execution mode is strict phase-by-phase progression unless `requirements.md` explicitly requires otherwise.
+- Rust toolchain baseline for this project is stable latest.
+
+---
+
+## 0. Project Setup
+
+### 0.1 Initialize Rust Project
+- [x] Create Cargo.toml with project metadata
+  - [x] Set edition = "2021"
+  - [x] Add basic dependencies (clap, serde, serde_json, thiserror)
+  - [x] Configure workspace if needed
+- [x] Create initial directory structure matching requirements.md
+- [x] Set up .gitignore for Rust projects
+- [x] Initialize git repository
+
+### 0.2 Configure Development Tools
+- [x] Add rustfmt.toml configuration
+- [x] Add clippy.toml for linting rules
+- [x] Set up CI configuration (GitHub Actions or similar)
+  - [x] cargo test
+  - [x] cargo clippy --deny warnings
+  - [x] cargo fmt --check
+- [x] Create CONTRIBUTING.md if needed
+
+---
+
+## 1. Phase 1 - Lexer
+
+### 1.1 Define Token Types
+- [ ] Create `src/lexer/mod.rs`
+- [ ] Create `src/lexer/token.rs`
+  - [ ] Define `Token` enum with all token types
+  - [ ] Implement keyword tokens (module, import, export, etc.)
+  - [ ] Implement literal tokens (IntLiteral, FloatLiteral, StringLiteral, BoolLiteral)
+  - [ ] Implement identifier token
+  - [ ] Implement decorator tokens (Hash, LBracket, RBracket)
+  - [ ] Implement delimiter tokens (braces, parens, angles, etc.)
+  - [ ] Implement operator tokens (arithmetic, comparison, logical)
+  - [ ] Implement special tokens (EOF, Newline)
+  - [ ] Add `Span` struct with position tracking (file, line, col)
+  - [ ] Implement Display trait for Token
+
+### 1.2 Implement Lexer Core
+- [ ] Create `src/lexer/lexer.rs`
+  - [ ] Define `Lexer` struct with source and position tracking
+  - [ ] Implement `new(source: String, file: PathBuf) -> Lexer`
+  - [ ] Implement `next_token() -> Result<Token, LexError>`
+  - [ ] Implement character peeking and advancing
+  - [ ] Track line and column numbers
+
+### 1.3 Implement Token Recognition
+- [ ] Implement whitespace skipping
+- [ ] Implement single-line comment handling (`//`)
+- [ ] Implement block comment handling (`/* */`)
+- [ ] Implement string literal lexing
+  - [ ] Handle double quotes
+  - [ ] Handle escape sequences (\n, \t, \\, \")
+  - [ ] Error on unterminated strings
+- [ ] Implement number literal lexing
+  - [ ] Integer literals (decimal only)
+  - [ ] Float literals (with decimal point)
+- [ ] Implement identifier and keyword lexing
+  - [ ] Distinguish keywords from identifiers
+- [ ] Implement operator lexing
+  - [ ] Handle multi-character operators (==, !=, <=, >=, &&, ||)
+  - [ ] Handle arrow operators (=>, ->)
+
+### 1.4 Lexer Error Handling
+- [ ] Define `LexError` enum using thiserror
+  - [ ] UnterminatedString variant
+  - [ ] UnexpectedChar variant
+  - [ ] InvalidEscape variant
+- [ ] Include span information in all errors
+- [ ] Implement error recovery (continue after error)
+
+### 1.5 Lexer Tests
+- [ ] Unit test: keyword recognition
+- [ ] Unit test: identifier recognition
+- [ ] Unit test: integer literals
+- [ ] Unit test: float literals
+- [ ] Unit test: string literals with escapes
+- [ ] Unit test: all operators
+- [ ] Unit test: comments (single-line and block)
+- [ ] Unit test: position tracking accuracy
+- [ ] Unit test: error cases (unterminated string, invalid char)
+- [ ] Unit test: decorator sequence `#[`
+
+---
+
+## 2. Phase 2 - Parser & AST
+
+### 2.1 Define AST Node Types
+- [ ] Create `src/parser/mod.rs`
+- [ ] Create `src/parser/ast.rs`
+  - [ ] Define `SourceFile` struct
+  - [ ] Define `TopLevelItem` enum (Module, Class, Interface, Struct, Enum, Import)
+  - [ ] Define `ModuleDecl` struct
+  - [ ] Define `ProviderBinding` enum (Simple, Aliased)
+  - [ ] Define `ClassDecl` struct
+  - [ ] Define `InterfaceDecl` struct
+  - [ ] Define `StructDecl` struct
+  - [ ] Define `EnumDecl` struct
+  - [ ] Define `ConstructorDecl` struct
+  - [ ] Define `MethodDecl` struct
+  - [ ] Define `FieldDecl` struct
+  - [ ] Define `Param` struct
+  - [ ] Define `Annotation` struct
+  - [ ] Define `AnnotationArg` enum (Positional, Named)
+  - [ ] Define `TypeExpr` enum (Named, Generic, Result, Option)
+  - [ ] Define `Expr` enum (all expression types)
+  - [ ] Define `Stmt` enum (Let, Return, Expr, If)
+  - [ ] Define `Block` struct
+  - [ ] Define `BinOp` and `UnaryOp` enums
+  - [ ] Ensure all nodes have `Span` field
+  - [ ] Implement Debug traits for all AST nodes
+
+### 2.2 Implement Parser Core
+- [ ] Create `src/parser/parser.rs`
+  - [ ] Define `Parser` struct with token stream and position
+  - [ ] Implement `new(tokens: Vec<Token>) -> Parser`
+  - [ ] Implement `peek() -> &Token`
+  - [ ] Implement `advance() -> Token`
+  - [ ] Implement `expect(TokenType) -> Result<Token, ParseError>`
+  - [ ] Implement `match_token(TokenType) -> bool`
+
+### 2.3 Implement Top-Level Parsing
+- [ ] Implement `parse_source_file() -> Result<SourceFile, Vec<ParseError>>`
+- [ ] Implement `parse_top_level_item() -> Result<TopLevelItem, ParseError>`
+- [ ] Implement `parse_import() -> Result<ImportDecl, ParseError>`
+- [ ] Implement `parse_module() -> Result<ModuleDecl, ParseError>`
+  - [ ] Parse `import` statements within module
+  - [ ] Parse `provide` bindings (simple and aliased)
+  - [ ] Parse `control` declarations
+  - [ ] Parse `export` declarations
+
+### 2.4 Implement Type Parsing
+- [ ] Implement `parse_type_expr() -> Result<TypeExpr, ParseError>`
+  - [ ] Parse simple types (Int, String, Bool, etc.)
+  - [ ] Parse generic types (List<T>, Map<K,V>)
+  - [ ] Parse Result<T, E>
+  - [ ] Parse Option<T>
+  - [ ] Handle nested generics
+
+### 2.5 Implement Annotation Parsing
+- [ ] Implement `parse_annotations() -> Result<Vec<Annotation>, ParseError>`
+  - [ ] Parse `#[name]` syntax
+  - [ ] Parse `#[name(arg1, arg2)]` with positional args
+  - [ ] Parse `#[name(key1 = value1, key2 = value2)]` with named args
+  - [ ] Handle multiple annotations on same item
+
+### 2.6 Implement Class/Interface/Struct Parsing
+- [ ] Implement `parse_class() -> Result<ClassDecl, ParseError>`
+  - [ ] Parse class annotations
+  - [ ] Parse class name
+  - [ ] Parse `implements` clause
+  - [ ] Parse constructor with `constructor` keyword
+  - [ ] Parse `private` modifier on constructor params
+  - [ ] Parse methods
+  - [ ] Parse fields
+- [ ] Implement `parse_interface() -> Result<InterfaceDecl, ParseError>`
+- [ ] Implement `parse_struct() -> Result<StructDecl, ParseError>`
+- [ ] Implement `parse_enum() -> Result<EnumDecl, ParseError>`
+
+### 2.7 Implement Method/Function Parsing
+- [ ] Implement `parse_method() -> Result<MethodDecl, ParseError>`
+  - [ ] Parse method annotations
+  - [ ] Parse method name
+  - [ ] Parse parameter list
+  - [ ] Parse return type
+  - [ ] Parse method body (block)
+
+### 2.8 Implement Expression Parsing
+- [ ] Implement `parse_expr() -> Result<Expr, ParseError>`
+- [ ] Implement `parse_primary() -> Result<Expr, ParseError>`
+  - [ ] Parse literals (int, float, string, bool, null)
+  - [ ] Parse identifiers
+  - [ ] Parse parenthesized expressions
+- [ ] Implement `parse_call() -> Result<Expr, ParseError>`
+- [ ] Implement `parse_field_access() -> Result<Expr, ParseError>`
+- [ ] Implement operator precedence parsing
+  - [ ] Parse binary operators with correct precedence
+  - [ ] Parse unary operators
+- [ ] Implement `parse_block() -> Result<Block, ParseError>`
+
+### 2.9 Implement Statement Parsing
+- [ ] Implement `parse_stmt() -> Result<Stmt, ParseError>`
+- [ ] Implement `parse_let_stmt() -> Result<Stmt, ParseError>`
+- [ ] Implement `parse_return_stmt() -> Result<Stmt, ParseError>`
+- [ ] Implement `parse_if_stmt() -> Result<Stmt, ParseError>`
+- [ ] Implement expression statements
+
+### 2.10 Parser Error Handling
+- [ ] Define `ParseError` enum using thiserror
+  - [ ] UnexpectedToken variant
+  - [ ] UnexpectedEof variant
+  - [ ] InvalidSyntax variant
+- [ ] Implement error recovery (synchronization points)
+- [ ] Collect multiple errors before stopping
+- [ ] Include span information in all errors
+
+### 2.11 Parser Tests
+- [ ] Unit test: parse simple module
+- [ ] Unit test: parse class with constructor and methods
+- [ ] Unit test: parse interface
+- [ ] Unit test: parse struct
+- [ ] Unit test: parse annotations with various argument forms
+- [ ] Unit test: parse generic types
+- [ ] Unit test: parse nested expressions
+- [ ] Unit test: parse all statement types
+- [ ] Unit test: error recovery on invalid syntax
+- [ ] Unit test: multiple errors collected
+- [ ] Unit test: `private` constructor params
+
+---
+
+## 3. Phase 3 - Name Resolution
+
+### 3.1 Implement Symbol Table
+- [ ] Create `src/resolver/mod.rs`
+- [ ] Define `SymbolTable` struct
+  - [ ] Implement scope hierarchy (file → class → method)
+  - [ ] Implement `insert(name: String, kind: SymbolKind, span: Span)`
+  - [ ] Implement `lookup(name: String) -> Option<&Symbol>`
+  - [ ] Implement `enter_scope()` and `exit_scope()`
+- [ ] Define `Symbol` struct (name, kind, type, span)
+- [ ] Define `SymbolKind` enum (Type, Variable, Class, Interface, etc.)
+
+### 3.2 Implement Name Resolution Pass
+- [ ] Implement `Resolver` struct
+- [ ] Implement `resolve_source_file(ast: &SourceFile) -> Result<(), Vec<ResolveError>>`
+- [ ] Implement `resolve_module(module: &ModuleDecl)`
+  - [ ] Resolve imported module names
+  - [ ] Resolve provider class names
+  - [ ] Resolve controller class names
+  - [ ] Resolve exported symbol names
+- [ ] Implement `resolve_class(class: &ClassDecl)`
+  - [ ] Resolve implemented interface names
+  - [ ] Resolve constructor parameter types
+  - [ ] Resolve field types
+  - [ ] Resolve method parameter and return types
+- [ ] Implement `resolve_type_expr(ty: &TypeExpr)`
+  - [ ] Resolve Named types
+  - [ ] Resolve Generic type parameters
+  - [ ] Resolve Result and Option inner types
+- [ ] Implement `resolve_annotation(annotation: &Annotation)`
+  - [ ] Resolve class references in annotation arguments
+
+### 3.3 Resolution Error Handling
+- [ ] Define `ResolveError` enum using thiserror
+  - [ ] UndefinedType variant
+  - [ ] UndefinedSymbol variant
+  - [ ] DuplicateSymbol variant
+- [ ] Include span information in all errors
+- [ ] Collect all resolution errors
+
+### 3.4 Name Resolution Tests
+- [ ] Unit test: resolve simple types
+- [ ] Unit test: resolve generic types
+- [ ] Unit test: resolve interface implementations
+- [ ] Unit test: resolve constructor dependencies
+- [ ] Unit test: error on undefined type
+- [ ] Unit test: error on undefined symbol
+- [ ] Unit test: error on duplicate symbols
+- [ ] Unit test: scope hierarchy works correctly
+
+---
+
+## 4. Phase 4 - Type Checker
+
+### 4.1 Implement Type System Core
+- [ ] Create `src/typechecker/mod.rs`
+- [ ] Define `Type` enum (distinct from `TypeExpr`)
+  - [ ] Primitive types
+  - [ ] Class/Interface types
+  - [ ] Generic types with concrete parameters
+  - [ ] Function types
+- [ ] Implement type equality checking
+- [ ] Implement type compatibility checking
+
+### 4.2 Implement Type Inference
+- [ ] Implement `TypeChecker` struct
+- [ ] Implement `infer_expr(expr: &Expr) -> Result<Type, TypeError>`
+  - [ ] Infer literal types
+  - [ ] Infer identifier types (lookup in symbol table)
+  - [ ] Infer call expression types
+  - [ ] Infer field access types
+  - [ ] Infer binary operation types
+  - [ ] Infer unary operation types
+
+### 4.3 Implement Type Validation
+- [ ] Implement `check_source_file(ast: &SourceFile) -> Result<(), Vec<TypeError>>`
+- [ ] Implement `check_class(class: &ClassDecl)`
+  - [ ] Check all public methods have explicit return types
+  - [ ] Check all DTO fields have explicit types
+  - [ ] Check method bodies match declared return types
+- [ ] Implement `check_method(method: &MethodDecl)`
+  - [ ] Validate return type annotation is present
+  - [ ] Check return statements match declared type
+  - [ ] Validate parameter types
+
+### 4.4 Implement Controller-Specific Validation
+- [ ] Check controller handler methods return `Result<T, HttpError>`
+- [ ] Validate T is serializable
+- [ ] Check `#[body]` parameter types are deserializable
+
+### 4.5 Implement Serializability Checking
+- [ ] Implement `is_serializable(ty: &Type) -> bool`
+  - [ ] Check primitives (Int, Float, Bool, String)
+  - [ ] Check structs/classes have all-typed fields
+  - [ ] Check List<T> where T is serializable
+  - [ ] Check Map<String, T> where T is serializable
+- [ ] Emit error for non-serializable return types
+
+### 4.6 Type Checker Error Handling
+- [ ] Define `TypeError` enum using thiserror
+  - [ ] MissingReturnType variant
+  - [ ] UntypedDtoField variant
+  - [ ] NonSerializableReturn variant
+  - [ ] TypeMismatch variant
+  - [ ] IncompatibleTypes variant
+- [ ] Include span information in all errors
+- [ ] Collect all type errors
+
+### 4.7 Type Checker Tests
+- [ ] Unit test: infer expression types
+- [ ] Unit test: check return type annotations required
+- [ ] Unit test: check DTO fields must be typed
+- [ ] Unit test: check controller handlers return Result
+- [ ] Unit test: check serializable types
+- [ ] Unit test: error on non-serializable return
+- [ ] Unit test: error on type mismatch
+- [ ] Unit test: generic type checking
+
+---
+
+## 5. Phase 5 - Annotation Processor
+
+### 5.1 Implement Annotation Registry
+- [ ] Create `src/annotations/mod.rs`
+- [ ] Define `AnnotationRegistry` struct
+- [ ] Define known annotation metadata
+  - [ ] Name, valid targets, required/optional arguments
+- [ ] Implement `register_annotation(metadata: AnnotationMetadata)`
+- [ ] Register all built-in annotations
+
+### 5.2 Implement Annotation Validation
+- [ ] Implement `AnnotationProcessor` struct
+- [ ] Implement `process_source_file(ast: &SourceFile) -> Result<(), Vec<AnnotationError>>`
+- [ ] Implement `validate_annotation(ann: &Annotation, target: AnnotationTarget)`
+  - [ ] Check annotation name is known
+  - [ ] Check annotation target is valid
+  - [ ] Check required arguments are present
+  - [ ] Check argument types are correct
+
+### 5.3 Validate Specific Annotations
+- [ ] Validate `#[injectable]`
+  - [ ] Check scope argument is valid (singleton/request/transient)
+  - [ ] Default to singleton if omitted
+- [ ] Validate `#[controller(path)]`
+  - [ ] Check path argument is a string literal
+  - [ ] Check applied to class only
+- [ ] Validate HTTP method annotations (`#[get]`, `#[post]`, etc.)
+  - [ ] Check path argument is a string literal
+  - [ ] Check applied to method only
+- [ ] Validate parameter annotations (`#[param]`, `#[query]`, `#[body]`, `#[header]`)
+  - [ ] Check applied to method parameters only
+  - [ ] Validate `#[body]` appears at most once per method
+  - [ ] Validate `#[param("id")]` matches route path parameter
+- [ ] Validate lifecycle annotations (`#[use_guards]`, `#[use_interceptors]`, `#[use_pipes]`)
+  - [ ] Check arguments are class names
+  - [ ] Validate class references exist
+
+### 5.4 Route Parameter Binding Validation
+- [ ] Extract route path from controller and method annotations
+- [ ] Parse route path for parameters (`:paramName`)
+- [ ] Check each `#[param("name")]` matches a route parameter
+- [ ] Check each route parameter has a corresponding `#[param]`
+- [ ] Error on unbound route parameters
+- [ ] Error on unused param annotations
+
+### 5.5 Annotation Error Handling
+- [ ] Define `AnnotationError` enum using thiserror
+  - [ ] UnknownAnnotation variant
+  - [ ] MissingArgument variant
+  - [ ] InvalidArgument variant
+  - [ ] UnboundRouteParam variant
+  - [ ] DuplicateBody variant
+  - [ ] InvalidTarget variant
+- [ ] Include span information in all errors
+- [ ] Collect all annotation errors
+
+### 5.6 Annotation Processor Tests
+- [ ] Unit test: validate known annotations
+- [ ] Unit test: error on unknown annotation
+- [ ] Unit test: validate required arguments
+- [ ] Unit test: validate injectable scope values
+- [ ] Unit test: validate controller path
+- [ ] Unit test: validate route parameter binding
+- [ ] Unit test: error on duplicate @body
+- [ ] Unit test: error on unbound route param
+- [ ] Unit test: validate lifecycle annotations
+
+---
+
+## 6. Phase 6 - DI Graph Builder & Validator
+
+### 6.1 Implement DI Graph Structure
+- [ ] Create `src/di/mod.rs`
+- [ ] Create `src/di/graph.rs`
+- [ ] Define `DiGraph` struct
+  - [ ] Nodes: providers (class name, scope, dependencies)
+  - [ ] Edges: dependency relationships
+- [ ] Define `Provider` struct (name, scope, dependencies, span)
+- [ ] Define `Scope` enum (Singleton, Request, Transient)
+- [ ] Implement `add_provider(provider: Provider)`
+- [ ] Implement `add_dependency(from: String, to: String)`
+
+### 6.2 Build DI Graph from AST
+- [ ] Implement `DiGraphBuilder` struct
+- [ ] Implement `build(ast: &SourceFile) -> Result<DiGraph, Vec<DiError>>`
+- [ ] Collect all `#[injectable]` classes
+- [ ] For each injectable class:
+  - [ ] Extract constructor parameters as dependencies
+  - [ ] Determine scope from annotation
+  - [ ] Add as provider node
+- [ ] Process module `provide` declarations
+  - [ ] Handle simple bindings (provide X)
+  - [ ] Handle aliased bindings (provide Interface => Impl)
+- [ ] Build dependency edges
+
+### 6.3 Validate DI Graph
+- [ ] Implement `validate_di_graph(graph: &DiGraph) -> Result<(), Vec<DiError>>`
+- [ ] Check for missing providers
+  - [ ] For each dependency, ensure provider exists in scope
+- [ ] Check for circular dependencies
+  - [ ] Implement cycle detection algorithm (DFS with visited set)
+  - [ ] Report full cycle path in error
+- [ ] Check for duplicate providers
+  - [ ] Detect multiple providers for same token in same module
+- [ ] Validate scope compatibility
+  - [ ] singleton can only inject singleton
+  - [ ] request can inject singleton and request
+  - [ ] transient can inject all scopes
+  - [ ] Error on scope violations
+
+### 6.4 Validate Module Provider Rules
+- [ ] Check provider classes are marked `#[injectable]`
+- [ ] Check exported symbols are provided in same module
+- [ ] Validate interface implementations for aliased bindings
+
+### 6.5 DI Graph Error Handling
+- [ ] Define `DiError` enum using thiserror
+  - [ ] MissingProvider variant (DI001)
+  - [ ] CircularDependency variant (DI002)
+  - [ ] DuplicateProvider variant (DI003)
+  - [ ] ScopeMismatch variant (DI004)
+  - [ ] NotInjectable variant (DI005)
+  - [ ] ExportWithoutProvider variant (DI006)
+- [ ] Include span information in all errors
+- [ ] Collect all DI errors
+
+### 6.6 DI Graph Tests
+- [ ] Unit test: build simple DI graph
+- [ ] Unit test: detect missing provider
+- [ ] Unit test: detect circular dependency (A→B→A)
+- [ ] Unit test: detect longer cycles (A→B→C→A)
+- [ ] Unit test: detect duplicate provider
+- [ ] Unit test: validate singleton scope restrictions
+- [ ] Unit test: validate request scope can inject singleton
+- [ ] Unit test: validate transient scope permissions
+- [ ] Unit test: error on non-injectable class
+- [ ] Unit test: error on export without provider
+- [ ] Unit test: aliased bindings work correctly
+
+---
+
+## 7. Phase 7 - Module Graph Builder & Validator
+
+### 7.1 Implement Module Graph Structure
+- [ ] Create `src/modules/mod.rs`
+- [ ] Create `src/modules/graph.rs`
+- [ ] Define `ModuleGraph` struct
+  - [ ] Nodes: modules (name, imports, exports, providers, controllers)
+  - [ ] Edges: import relationships
+- [ ] Define `Module` struct
+- [ ] Implement `add_module(module: Module)`
+- [ ] Implement `add_import(from: String, to: String)`
+
+### 7.2 Build Module Graph from AST
+- [ ] Implement `ModuleGraphBuilder` struct
+- [ ] Implement `build(ast: &SourceFile) -> Result<ModuleGraph, Vec<ModuleError>>`
+- [ ] Collect all module declarations
+- [ ] For each module:
+  - [ ] Record imports
+  - [ ] Record providers
+  - [ ] Record controllers
+  - [ ] Record exports
+  - [ ] Add module node
+- [ ] Build import edges between modules
+
+### 7.3 Validate Module Graph
+- [ ] Implement `validate_module_graph(graph: &ModuleGraph) -> Result<(), Vec<ModuleError>>`
+- [ ] Check for unknown imports
+  - [ ] Verify imported module exists
+- [ ] Check for circular imports
+  - [ ] Implement cycle detection
+  - [ ] Report full import cycle
+- [ ] Validate controller dependencies
+  - [ ] Check controller can access all required services
+  - [ ] Services must be provided in same module or imported
+
+### 7.4 Validate Module Provider Visibility
+- [ ] Check symbols are exported from source module
+- [ ] Error when consuming private provider from another module
+- [ ] Validate export declarations match provided symbols
+
+### 7.5 Module Graph Error Handling
+- [ ] Define `ModuleError` enum using thiserror
+  - [ ] UnknownImport variant (MOD001)
+  - [ ] CircularImport variant (MOD002)
+  - [ ] UnsatisfiedController variant (MOD003)
+  - [ ] PrivateProvider variant (MOD004)
+- [ ] Include span information in all errors
+- [ ] Collect all module errors
+
+### 7.6 Module Graph Tests
+- [ ] Unit test: build simple module graph
+- [ ] Unit test: detect unknown import
+- [ ] Unit test: detect circular import (A→B→A)
+- [ ] Unit test: detect longer import cycles
+- [ ] Unit test: validate controller dependencies satisfied
+- [ ] Unit test: error on private provider access
+- [ ] Unit test: validate exports match providers
+- [ ] Unit test: multi-module app with proper imports
+
+---
+
+## 8. Phase 8 - Route Table Builder & Validator
+
+### 8.1 Implement Route Table Structure
+- [ ] Create `src/routes/mod.rs`
+- [ ] Create `src/routes/registry.rs`
+- [ ] Define `RouteTable` struct
+- [ ] Define `Route` struct
+  - [ ] HTTP method (GET, POST, PUT, DELETE, PATCH)
+  - [ ] Full path (prefix + method path)
+  - [ ] Handler (fully qualified method name)
+  - [ ] Path parameters
+  - [ ] Span
+- [ ] Define `HttpMethod` enum
+- [ ] Implement `add_route(route: Route)`
+- [ ] Implement `get_routes() -> &[Route]`
+
+### 8.2 Build Route Table from AST
+- [ ] Implement `RouteTableBuilder` struct
+- [ ] Implement `build(ast: &SourceFile) -> Result<RouteTable, Vec<RouteError>>`
+- [ ] Find all classes with `#[controller(prefix)]`
+- [ ] For each controller:
+  - [ ] Extract controller path prefix
+  - [ ] Find all methods with HTTP method annotations
+  - [ ] For each handler method:
+    - [ ] Extract HTTP method (get, post, put, delete, patch)
+    - [ ] Extract method path
+    - [ ] Construct full path (prefix + method path)
+    - [ ] Record route entry
+
+### 8.3 Parse Route Paths
+- [ ] Implement route path parser
+- [ ] Extract path parameters (`:paramName` syntax)
+- [ ] Validate path syntax
+- [ ] Store parameter names for validation
+
+### 8.4 Validate Route Table
+- [ ] Implement `validate_route_table(table: &RouteTable) -> Result<(), Vec<RouteError>>`
+- [ ] Check for duplicate routes
+  - [ ] Same HTTP method + exact path → error
+  - [ ] Report both conflicting handlers
+- [ ] Validate path parameters
+  - [ ] Each `:param` in path must have `#[param("name")]` on method
+  - [ ] Each `#[param("name")]` must have corresponding `:name` in path
+  - [ ] Error on unbound path parameters
+  - [ ] Error on unused param annotations
+
+### 8.5 Route Error Handling
+- [ ] Define `RouteError` enum using thiserror
+  - [ ] DuplicateRoute variant (ROUTE001)
+  - [ ] UnboundPathParam variant (ROUTE002)
+  - [ ] UnusedParamAnnotation variant (ROUTE003)
+- [ ] Include span information in all errors
+- [ ] Collect all route errors
+
+### 8.6 Route Table Tests
+- [ ] Unit test: build simple route table
+- [ ] Unit test: construct full paths from prefix + method path
+- [ ] Unit test: detect duplicate routes
+- [ ] Unit test: validate path parameters
+- [ ] Unit test: error on unbound path param
+- [ ] Unit test: error on unused param annotation
+- [ ] Unit test: multiple controllers with different prefixes
+- [ ] Unit test: all HTTP methods (GET, POST, PUT, DELETE, PATCH)
+
+---
+
+## 9. Phase 9 - Lifecycle Pipeline Builder
+
+### 9.1 Implement Pipeline Structure
+- [ ] Create `src/lifecycle/mod.rs`
+- [ ] Create `src/lifecycle/pipeline.rs`
+- [ ] Define `Pipeline` struct
+  - [ ] Middleware list
+  - [ ] Guards list
+  - [ ] Pipes list
+  - [ ] Interceptors list
+  - [ ] Exception filters list
+- [ ] Define `PipelineStage` enum
+- [ ] Define `LifecycleComponent` struct (name, type, span)
+
+### 9.2 Build Pipelines from Annotations
+- [ ] Implement `PipelineBuilder` struct
+- [ ] Implement `build(route_table: &RouteTable, ast: &SourceFile) -> Result<HashMap<Route, Pipeline>, Vec<LifecycleError>>`
+- [ ] For each route:
+  - [ ] Find corresponding controller class
+  - [ ] Find corresponding handler method
+  - [ ] Collect class-level lifecycle annotations
+  - [ ] Collect method-level lifecycle annotations
+  - [ ] Build ordered pipeline
+
+### 9.3 Assemble Pipeline Order
+- [ ] Extract `#[use_guards(...)]` from class level
+- [ ] Extract `#[use_guards(...)]` from method level
+- [ ] Combine: class-level first, then method-level
+- [ ] Repeat for interceptors and pipes
+- [ ] Maintain fixed order: Middleware → Guards → Pipes → Handler → Interceptors → Filters
+
+### 9.4 Validate Pipeline Components
+- [ ] Implement `validate_pipelines(pipelines: &HashMap<Route, Pipeline>) -> Result<(), Vec<LifecycleError>>`
+- [ ] For each guard class:
+  - [ ] Check implements `Guard` interface
+  - [ ] Check is `#[injectable]`
+- [ ] For each interceptor class:
+  - [ ] Check implements `Interceptor` interface
+  - [ ] Check is `#[injectable]`
+- [ ] For each pipe class:
+  - [ ] Check implements `Pipe` interface
+  - [ ] Check is `#[injectable]`
+
+### 9.5 Lifecycle Error Handling
+- [ ] Define `LifecycleError` enum using thiserror
+  - [ ] InvalidGuard variant (LC001)
+  - [ ] InvalidInterceptor variant (LC002)
+  - [ ] InvalidPipe variant (LC003)
+  - [ ] NotInjectable variant (LC004)
+- [ ] Include span information in all errors
+- [ ] Collect all lifecycle errors
+
+### 9.6 Lifecycle Pipeline Tests
+- [ ] Unit test: build simple pipeline
+- [ ] Unit test: combine class and method level annotations
+- [ ] Unit test: maintain correct order
+- [ ] Unit test: error on invalid guard (wrong interface)
+- [ ] Unit test: error on invalid interceptor
+- [ ] Unit test: error on invalid pipe
+- [ ] Unit test: error on non-injectable component
+- [ ] Unit test: multiple guards applied correctly
+- [ ] Unit test: empty pipeline (no lifecycle components)
+
+---
+
+## 10. Phase 10 - IR & Code Generation
+
+Execution policy for this phase:
+- [ ] Complete Cranelift end-to-end path first (IR lowering -> object generation -> runtime linking -> executable output).
+- [ ] Treat LLVM work as optional and non-blocking for v1 delivery.
+
+### 10.1 Define Intermediate Representation
+- [ ] Create `src/ir/mod.rs`
+- [ ] Define `IrModule` struct
+- [ ] Define `IrFunction` struct
+  - [ ] Name, parameters, return type, body
+- [ ] Define `IrBlock` struct (basic block)
+- [ ] Define `IrInstruction` enum
+  - [ ] Load, Store, Call, Return, Branch, etc.
+- [ ] Define `IrValue` enum (constants, variables, etc.)
+- [ ] Define `IrType` enum
+
+### 10.2 Lower AST to IR
+- [ ] Implement `IrGenerator` struct
+- [ ] Implement `generate_ir(ast: &SourceFile) -> Result<IrModule, IrError>`
+- [ ] Lower module declarations to IR
+- [ ] Lower class declarations to struct definitions
+- [ ] Lower methods to IR functions
+- [ ] Lower expressions to IR instructions
+- [ ] Lower statements to IR instructions
+
+### 10.3 Generate Static Tables in IR
+- [ ] Generate DI registry as static data
+  - [ ] Map of token string → factory function pointer
+- [ ] Generate route table as static data
+  - [ ] Array of (method, path, handler_fn_ptr)
+- [ ] Generate lifecycle pipelines as static data
+  - [ ] Per-route array of lifecycle function pointers
+
+### 10.4 Implement Cranelift Backend
+- [ ] Create `src/codegen/mod.rs`
+- [ ] Create `src/codegen/cranelift.rs`
+- [ ] Add Cranelift dependencies to Cargo.toml
+  - [ ] cranelift-codegen
+  - [ ] cranelift-frontend
+  - [ ] cranelift-module
+  - [ ] cranelift-object
+- [ ] Implement `CraneliftBackend` struct
+- [ ] Implement `compile(ir: &IrModule) -> Result<Vec<u8>, CodegenError>`
+  - [ ] Initialize Cranelift ISA and module
+  - [ ] Translate IR functions to Cranelift IR
+  - [ ] Compile to machine code
+  - [ ] Generate object file
+- [ ] Phase gate: do not start LLVM tasks until Cranelift-based executable generation succeeds for minimal app.
+
+### 10.5 Link Runtime
+- [ ] Create minimal Rust runtime crate
+  - [ ] HTTP server (TCP listener, HTTP/1.1 parser)
+  - [ ] Route dispatcher (reads static route table)
+  - [ ] DI container (reads static DI registry)
+  - [ ] JSON serializer/deserializer
+  - [ ] Lifecycle pipeline executor
+- [ ] Link generated code with runtime
+- [ ] Produce final executable binary
+
+### 10.6 Output Binary
+- [ ] Implement binary output to `./dist/<name>`
+- [ ] Make binary executable
+- [ ] Handle cross-platform concerns (if needed)
+
+### 10.7 Optional LLVM Backend
+- [ ] Create `src/codegen/llvm.rs` (behind feature flag)
+- [ ] Add LLVM dependencies (feature-gated)
+- [ ] Implement LLVM IR generation
+- [ ] Add `--features llvm` build option
+
+### 10.8 Codegen Tests
+- [ ] Unit test: generate IR from simple class
+- [ ] Unit test: generate IR from method with expressions
+- [ ] Unit test: generate static DI registry
+- [ ] Unit test: generate static route table
+- [ ] Integration test: compile minimal program to binary
+- [ ] Integration test: run generated binary
+- [ ] Integration test: verify HTTP server responds
+
+---
+
+## 11. Phase 11 - Error Reporting
+
+### 11.1 Design Error Format
+- [ ] Create `src/errors/mod.rs`
+- [ ] Define `Diagnostic` struct
+  - [ ] Error code (e.g., DI001)
+  - [ ] Severity (Error, Warning)
+  - [ ] Message
+  - [ ] Span
+  - [ ] Note (optional explanation)
+  - [ ] Help (optional suggestion)
+- [ ] Define `DiagnosticLevel` enum
+
+### 11.2 Implement Error Formatter
+- [ ] Implement `ErrorFormatter` struct
+- [ ] Implement `format_diagnostic(diag: &Diagnostic) -> String`
+  - [ ] Format error code and severity
+  - [ ] Show file path and line:col
+  - [ ] Display source code snippet
+  - [ ] Highlight error span with carets (^)
+  - [ ] Show note and help messages
+
+### 11.3 Implement Error Collection
+- [ ] Implement `DiagnosticCollector` struct
+- [ ] Implement `add(diagnostic: Diagnostic)`
+- [ ] Implement `has_errors() -> bool`
+- [ ] Implement `get_errors() -> &[Diagnostic]`
+- [ ] Implement `get_warnings() -> &[Diagnostic]`
+- [ ] Sort diagnostics by file, line, column
+
+### 11.4 Convert Phase Errors to Diagnostics
+- [ ] Convert `LexError` to `Diagnostic`
+- [ ] Convert `ParseError` to `Diagnostic`
+- [ ] Convert `ResolveError` to `Diagnostic`
+- [ ] Convert `TypeError` to `Diagnostic`
+- [ ] Convert `AnnotationError` to `Diagnostic`
+- [ ] Convert `DiError` to `Diagnostic`
+- [ ] Convert `ModuleError` to `Diagnostic`
+- [ ] Convert `RouteError` to `Diagnostic`
+- [ ] Convert `LifecycleError` to `Diagnostic`
+
+### 11.5 Implement Output Formats
+- [ ] Implement human-readable output (default)
+  - [ ] Colored output for terminals
+  - [ ] Plain text for non-TTY
+- [ ] Implement JSON output (`--format json`)
+  - [ ] Machine-readable format for tooling
+  - [ ] Include all diagnostic fields
+
+### 11.6 Error Reporting Tests
+- [ ] Unit test: format diagnostic with all fields
+- [ ] Unit test: format diagnostic with source snippet
+- [ ] Unit test: collect multiple diagnostics
+- [ ] Unit test: sort diagnostics by position
+- [ ] Unit test: JSON output format
+- [ ] Unit test: convert each error type to diagnostic
+- [ ] Integration test: error output matches expected format
+
+---
+
+## 12. Phase 12 - CLI
+
+### 12.1 Setup CLI Framework
+- [ ] Create `src/cli/mod.rs`
+- [ ] Create `src/main.rs`
+- [ ] Add `clap` dependency with derive feature
+- [ ] Define main CLI struct with clap
+- [ ] Define subcommands enum
+
+### 12.2 Implement `arwa new` Command
+- [ ] Create `src/cli/new.rs`
+- [ ] Define command arguments (project name, optional template)
+- [ ] Implement `run(args: NewArgs) -> Result<(), Error>`
+  - [ ] Validate project name
+  - [ ] Create project directory
+  - [ ] Copy template files from bundled templates
+  - [ ] Generate `arwa.blueprint.json`
+  - [ ] Initialize basic project structure
+  - [ ] Print success message with next steps
+
+### 12.3 Implement `arwa build` Command
+- [ ] Create `src/cli/build.rs`
+- [ ] Define command arguments (optional: output path, optimization level)
+- [ ] Implement `run(args: BuildArgs) -> Result<(), Error>`
+  - [ ] Read all `.rw` source files
+  - [ ] Run lexer phase
+  - [ ] Run parser phase
+  - [ ] Run resolver phase
+  - [ ] Run type checker phase
+  - [ ] Run annotation processor phase
+  - [ ] Run DI graph validator phase
+  - [ ] Run module graph validator phase
+  - [ ] Run route table builder phase
+  - [ ] Run lifecycle pipeline builder phase
+  - [ ] Generate IR
+  - [ ] Run codegen
+  - [ ] Output binary to `./dist/<name>`
+  - [ ] Print compilation summary
+
+### 12.4 Implement `arwa check` Command
+- [ ] Create `src/cli/check.rs`
+- [ ] Define command arguments (optional: format)
+- [ ] Implement `run(args: CheckArgs) -> Result<(), Error>`
+  - [ ] Run phases 1-9 (all validation, no codegen)
+  - [ ] Report errors and warnings
+  - [ ] Exit with appropriate code
+
+### 12.5 Implement `arwa run` Command
+- [ ] Create `src/cli/run.rs`
+- [ ] Define command arguments (optional: port, env)
+- [ ] Implement `run(args: RunArgs) -> Result<(), Error>`
+  - [ ] Run `arwa build`
+  - [ ] If build succeeds, execute output binary
+  - [ ] Pass through command-line arguments
+  - [ ] Stream output to stdout/stderr
+
+### 12.6 Implement `arwa add` Command
+- [ ] Create `src/cli/add.rs`
+- [ ] Define command arguments (feature name)
+- [ ] Implement `run(args: AddArgs) -> Result<(), Error>`
+  - [ ] Read `arwa.blueprint.json`
+  - [ ] Validate feature exists in registry
+  - [ ] Copy feature files from templates
+  - [ ] Update `arwa.blueprint.json`
+  - [ ] Print instructions for using the feature
+
+### 12.7 Implement `arwa fmt` Command
+- [ ] Create `src/cli/fmt.rs`
+- [ ] Define command arguments (optional: check mode)
+- [ ] Implement `run(args: FmtArgs) -> Result<(), Error>`
+  - [ ] Find all `.rw` files
+  - [ ] Parse each file
+  - [ ] Reformat according to style rules
+    - [ ] 2-space indentation
+    - [ ] Consistent blank lines
+    - [ ] Sort imports
+  - [ ] Write back to file (or check mode)
+
+### 12.8 CLI Error Handling
+- [ ] Implement user-friendly error messages
+- [ ] Use appropriate exit codes
+  - [ ] 0 for success
+  - [ ] 1 for compilation errors
+  - [ ] 2 for CLI usage errors
+- [ ] Handle file system errors gracefully
+- [ ] Handle missing dependencies
+
+### 12.9 CLI Tests
+- [ ] Integration test: `arwa new` creates project
+- [ ] Integration test: `arwa build` compiles minimal project
+- [ ] Integration test: `arwa check` validates without codegen
+- [ ] Integration test: `arwa run` executes binary
+- [ ] Integration test: `arwa add` adds feature
+- [ ] Integration test: `arwa fmt` formats files
+- [ ] Unit test: CLI argument parsing
+- [ ] Unit test: error handling and exit codes
+
+---
+
+## 13. Phase 13 - Project Scaffolding & Blueprint
+
+### 13.1 Design Blueprint Schema
+- [ ] Define `arwa.blueprint.json` structure
+  - [ ] name: String
+  - [ ] version: String
+  - [ ] starter: String
+  - [ ] features: Vec<String>
+- [ ] Create JSON schema validation
+
+### 13.2 Create Starter Templates
+- [ ] Create `templates/starters/minimal/`
+  - [ ] Basic module with main function
+  - [ ] Minimal project structure
+- [ ] Create `templates/starters/api/`
+  - [ ] Module with controller
+  - [ ] Service with DI
+  - [ ] DTO examples
+  - [ ] Example routes
+- [ ] Create `templates/starters/full/`
+  - [ ] API starter
+  - [ ] Auth module
+  - [ ] Database module
+  - [ ] Logger module
+  - [ ] Complete example app
+
+### 13.3 Create Feature Templates
+- [ ] Create `templates/features/http/`
+  - [ ] HTTP utilities
+  - [ ] Custom decorators
+- [ ] Create `templates/features/di/`
+  - [ ] Advanced DI examples
+  - [ ] Custom scopes
+- [ ] Create `templates/features/logger/`
+  - [ ] Logger service
+  - [ ] Logger module
+  - [ ] Usage examples
+- [ ] Create `templates/features/auth-jwt/`
+  - [ ] JWT auth guard
+  - [ ] Auth module
+  - [ ] JWT utilities
+  - [ ] Login/register examples
+- [ ] Create `templates/features/db-postgres/`
+  - [ ] Postgres connection
+  - [ ] Repository pattern
+  - [ ] Migration utilities
+
+### 13.4 Create Template Registry
+- [ ] Create `templates/registry.json`
+- [ ] Document each feature
+  - [ ] Name
+  - [ ] Description
+  - [ ] File list
+  - [ ] Dependencies
+  - [ ] Usage instructions
+- [ ] Implement registry parser
+
+### 13.5 Bundle Templates in Binary
+- [ ] Use `include_str!` or `include_bytes!` macros
+- [ ] Embed all template files in compiler binary
+- [ ] Implement template extraction at runtime
+
+### 13.6 Template Tests
+- [ ] Unit test: parse blueprint.json
+- [ ] Unit test: validate blueprint schema
+- [ ] Unit test: parse registry.json
+- [ ] Integration test: create project from minimal template
+- [ ] Integration test: create project from api template
+- [ ] Integration test: create project from full template
+- [ ] Integration test: add each feature to project
+
+---
+
+## 14. Phase 14 - Standard Library
+
+### 14.1 Implement `stdlib/http.rw`
+- [ ] Create `stdlib/http.rw`
+- [ ] Define `HttpError` class
+  - [ ] status: Int field
+  - [ ] message: String field
+  - [ ] Constructor
+- [ ] Define `RequestContext` struct
+  - [ ] method: String
+  - [ ] path: String
+  - [ ] headers: Map<String, String>
+  - [ ] body: String
+- [ ] Define `Response` struct
+  - [ ] status: Int
+  - [ ] headers: Map<String, String>
+  - [ ] body: String
+- [ ] Define `Guard` interface
+  - [ ] canActivate method signature
+- [ ] Define `Interceptor` interface
+  - [ ] intercept method signature
+- [ ] Define `Pipe` interface
+  - [ ] transform method signature
+- [ ] Define `PipeMetadata` struct
+
+### 14.2 Implement `stdlib/result.rw`
+- [ ] Create `stdlib/result.rw`
+- [ ] Define `Result<T, E>` enum (if not built-in)
+  - [ ] Ok(T) variant
+  - [ ] Err(E) variant
+- [ ] Implement methods:
+  - [ ] unwrap() -> T
+  - [ ] unwrap_or(default: T) -> T
+  - [ ] map<U>(fn: (T) -> U) -> Result<U, E>
+  - [ ] is_ok() -> Bool
+  - [ ] is_err() -> Bool
+- [ ] Define `Option<T>` enum (if not built-in)
+  - [ ] Some(T) variant
+  - [ ] None variant
+- [ ] Implement Option methods
+
+### 14.3 Implement `stdlib/json.rw`
+- [ ] Create `stdlib/json.rw`
+- [ ] Define `Json` class with static methods
+  - [ ] encode<T>(value: T) -> String
+  - [ ] decode<T>(raw: String) -> Result<T, JsonError>
+- [ ] Define `JsonError` class
+  - [ ] message: String
+  - [ ] position: Int (optional)
+
+### 14.4 Standard Library Integration
+- [ ] Make stdlib available to all ArwaLang programs
+- [ ] Implement automatic imports for common types
+- [ ] Handle stdlib types in type checker
+- [ ] Ensure stdlib types are available in codegen
+
+### 14.5 Standard Library Tests
+- [ ] Unit test: HttpError construction
+- [ ] Unit test: RequestContext usage
+- [ ] Unit test: Guard interface implementation
+- [ ] Unit test: Interceptor interface implementation
+- [ ] Unit test: Pipe interface implementation
+- [ ] Unit test: Result methods
+- [ ] Unit test: Option methods
+- [ ] Unit test: Json encode/decode
+- [ ] Integration test: use stdlib in example program
+
+---
+
+## 15. Testing Infrastructure
+
+### 15.1 Setup Test Framework
+- [ ] Configure cargo test
+- [ ] Add test utilities module
+- [ ] Add test fixtures directory
+- [ ] Create test helper functions
+
+### 15.2 Create E2E Test Harness
+- [ ] Create `tests/e2e/` directory
+- [ ] Implement test runner
+  - [ ] Parse `@expect` annotations
+  - [ ] Compile test programs
+  - [ ] Assert expected outcome (compile_success or compile_error CODE)
+- [ ] Implement test result reporting
+
+### 15.3 Create Required E2E Tests
+- [ ] `tests/e2e/minimal_app.rw`
+  - [ ] Single module, single controller, no DI
+  - [ ] `@expect: compile_success`
+- [ ] `tests/e2e/di_basic.rw`
+  - [ ] Service injected into controller
+  - [ ] `@expect: compile_success`
+- [ ] `tests/e2e/di_scope_violation.rw`
+  - [ ] Request-scoped into singleton
+  - [ ] `@expect: compile_error DI004`
+- [ ] `tests/e2e/circular_di.rw`
+  - [ ] A depends on B depends on A
+  - [ ] `@expect: compile_error DI002`
+- [ ] `tests/e2e/duplicate_route.rw`
+  - [ ] Two handlers on same path
+  - [ ] `@expect: compile_error ROUTE001`
+- [ ] `tests/e2e/missing_provider.rw`
+  - [ ] Controller needs service not in module
+  - [ ] `@expect: compile_error DI001`
+- [ ] `tests/e2e/full_app.rw`
+  - [ ] Multi-module with guards, interceptors, DTO validation
+  - [ ] `@expect: compile_success`
+
+### 15.4 Additional E2E Tests
+- [ ] Test circular module imports
+- [ ] Test private provider access error
+- [ ] Test unbound path parameter error
+- [ ] Test missing return type error
+- [ ] Test non-serializable return error
+- [ ] Test unknown annotation error
+- [ ] Test duplicate body parameter error
+- [ ] Test invalid guard error
+- [ ] Test complex multi-module app
+
+### 15.5 Performance Tests
+- [ ] Benchmark lexer performance
+- [ ] Benchmark parser performance
+- [ ] Benchmark compilation time for large projects
+- [ ] Memory usage profiling
+
+---
+
+## 16. Documentation
+
+### 16.1 Code Documentation
+- [ ] Add doc comments to all public functions
+- [ ] Add module-level documentation
+- [ ] Document error codes and their meanings
+- [ ] Document AST node structures
+- [ ] Generate rustdoc documentation
+
+### 16.2 User Documentation
+- [ ] Create README.md for the project
+  - [ ] Project overview
+  - [ ] Installation instructions
+  - [ ] Quick start guide
+  - [ ] Link to full documentation
+- [ ] Create language guide
+  - [ ] Syntax reference
+  - [ ] Type system
+  - [ ] Decorators
+  - [ ] DI system
+  - [ ] Module system
+- [ ] Create CLI reference
+  - [ ] Document all commands
+  - [ ] Document command-line options
+  - [ ] Provide examples
+
+### 16.3 Example Programs
+- [ ] Create hello world example
+- [ ] Create REST API example
+- [ ] Create multi-module example
+- [ ] Create authentication example
+- [ ] Create database integration example
+
+### 16.4 Error Code Reference
+- [ ] Create error code documentation
+- [ ] For each error code:
+  - [ ] Description
+  - [ ] Common causes
+  - [ ] How to fix
+  - [ ] Example code that triggers it
+
+---
+
+## 17. Polish & Release
+
+### 17.1 Error Message Quality
+- [ ] Review all error messages for clarity
+- [ ] Ensure helpful suggestions are provided
+- [ ] Test error messages with real users
+- [ ] Add color coding for terminal output
+
+### 17.2 Performance Optimization
+- [ ] Profile compilation performance
+- [ ] Optimize hot paths
+- [ ] Reduce memory allocations
+- [ ] Parallelize independent phases (if beneficial)
+
+### 17.3 Code Quality
+- [ ] Run cargo clippy on entire codebase
+- [ ] Fix all warnings
+- [ ] Run cargo fmt on entire codebase
+- [ ] Review code for improvements
+- [ ] Remove dead code
+- [ ] Remove debug print statements
+
+### 17.4 Final Testing
+- [ ] Run full test suite
+- [ ] Test on different platforms (Linux, macOS, Windows)
+- [ ] Test with various example programs
+- [ ] Stress test with large codebases
+- [ ] Verify all error codes are tested
+
+### 17.5 Release Preparation
+- [ ] Create changelog
+- [ ] Write release notes
+- [ ] Create binary distribution
+- [ ] Setup installation method
+- [ ] Create GitHub release
+- [ ] Tag version
+
+---
+
+## Dependencies Between Phases
+
+- Phase 2 depends on Phase 1 (Parser needs Lexer)
+- Phase 3 depends on Phase 2 (Resolver needs AST)
+- Phase 4 depends on Phase 3 (Type checker needs resolved symbols)
+- Phase 5 depends on Phase 2 (Annotation processor needs AST)
+- Phase 6 depends on Phases 3, 4, 5 (DI graph needs resolved, typed, annotated AST)
+- Phase 7 depends on Phase 6 (Module graph needs DI graph)
+- Phase 8 depends on Phases 3, 5 (Route table needs resolved, annotated AST)
+- Phase 9 depends on Phases 6, 8 (Lifecycle needs DI and route table)
+- Phase 10 depends on Phases 1-9 (Codegen needs fully validated AST)
+- Phase 11 follows Phase 10 in strict phase-by-phase execution mode
+- Phase 12 depends on Phases 1-10 (CLI orchestrates all phases)
+- Phase 13 follows Phase 12 in strict phase-by-phase execution mode
+- Phase 14 follows Phase 13 in strict phase-by-phase execution mode
+- Phase 15 follows Phase 14 in strict phase-by-phase execution mode
+
+## Recommended Development Order
+
+1. Start with Phase 0 (Project Setup)
+2. Implement Phase 1 (Lexer)
+3. Implement Phase 2 (Parser & AST)
+4. Implement Phase 3 (Name Resolution)
+5. Implement Phase 4 (Type Checker)
+6. Implement Phase 5 (Annotation Processor)
+7. Implement Phase 6 (DI Graph)
+8. Implement Phase 7 (Module Graph)
+9. Implement Phase 8 (Route Table)
+10. Implement Phase 9 (Lifecycle Pipeline)
+11. Implement Phase 10 (IR & Codegen, Cranelift-first)
+12. Implement Phase 11 (Error Reporting)
+13. Implement Phase 12 (CLI)
+14. Implement Phase 13 (Scaffolding & Blueprint)
+15. Implement Phase 14 (Standard Library)
+16. Implement Phase 15 (Testing Infrastructure)
+17. Implement Phase 16 (Documentation)
+18. Complete Phase 17 (Polish & Release)
