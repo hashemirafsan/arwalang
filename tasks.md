@@ -284,68 +284,68 @@ This document breaks down the ArwaLang compiler implementation into granular tas
 ## 4. Phase 4 - Type Checker
 
 ### 4.1 Implement Type System Core
-- [ ] Create `src/typechecker/mod.rs`
-- [ ] Define `Type` enum (distinct from `TypeExpr`)
-  - [ ] Primitive types
-  - [ ] Class/Interface types
-  - [ ] Generic types with concrete parameters
-  - [ ] Function types
-- [ ] Implement type equality checking
-- [ ] Implement type compatibility checking
+- [x] Create `src/typechecker/mod.rs`
+- [x] Define `Type` enum (distinct from `TypeExpr`)
+  - [x] Primitive types
+  - [x] Class/Interface types
+  - [x] Generic types with concrete parameters
+  - [x] Function types
+- [x] Implement type equality checking
+- [x] Implement type compatibility checking
 
 ### 4.2 Implement Type Inference
-- [ ] Implement `TypeChecker` struct
-- [ ] Implement `infer_expr(expr: &Expr) -> Result<Type, TypeError>`
-  - [ ] Infer literal types
-  - [ ] Infer identifier types (lookup in symbol table)
-  - [ ] Infer call expression types
-  - [ ] Infer field access types
-  - [ ] Infer binary operation types
-  - [ ] Infer unary operation types
+- [x] Implement `TypeChecker` struct
+- [x] Implement `infer_expr(expr: &Expr) -> Result<Type, TypeError>`
+  - [x] Infer literal types
+  - [x] Infer identifier types (lookup in symbol table)
+  - [x] Infer call expression types
+  - [x] Infer field access types
+  - [x] Infer binary operation types
+  - [x] Infer unary operation types
 
 ### 4.3 Implement Type Validation
-- [ ] Implement `check_source_file(ast: &SourceFile) -> Result<(), Vec<TypeError>>`
-- [ ] Implement `check_class(class: &ClassDecl)`
-  - [ ] Check all public methods have explicit return types
-  - [ ] Check all DTO fields have explicit types
-  - [ ] Check method bodies match declared return types
-- [ ] Implement `check_method(method: &MethodDecl)`
-  - [ ] Validate return type annotation is present
-  - [ ] Check return statements match declared type
-  - [ ] Validate parameter types
+- [x] Implement `check_source_file(ast: &SourceFile) -> Result<(), Vec<TypeError>>`
+- [x] Implement `check_class(class: &ClassDecl)`
+  - [x] Check all public methods have explicit return types
+  - [x] Check all DTO fields have explicit types
+  - [x] Check method bodies match declared return types
+- [x] Implement `check_method(method: &MethodDecl)`
+  - [x] Validate return type annotation is present
+  - [x] Check return statements match declared type
+  - [x] Validate parameter types
 
 ### 4.4 Implement Controller-Specific Validation
-- [ ] Check controller handler methods return `Result<T, HttpError>`
-- [ ] Validate T is serializable
-- [ ] Check `#[body]` parameter types are deserializable
+- [x] Check controller handler methods return `Result<T, HttpError>`
+- [x] Validate T is serializable
+- [x] Check `#[body]` parameter types are deserializable
 
 ### 4.5 Implement Serializability Checking
-- [ ] Implement `is_serializable(ty: &Type) -> bool`
-  - [ ] Check primitives (Int, Float, Bool, String)
-  - [ ] Check structs/classes have all-typed fields
-  - [ ] Check List<T> where T is serializable
-  - [ ] Check Map<String, T> where T is serializable
-- [ ] Emit error for non-serializable return types
+- [x] Implement `is_serializable(ty: &Type) -> bool`
+  - [x] Check primitives (Int, Float, Bool, String)
+  - [x] Check structs/classes have all-typed fields
+  - [x] Check List<T> where T is serializable
+  - [x] Check Map<String, T> where T is serializable
+- [x] Emit error for non-serializable return types
 
 ### 4.6 Type Checker Error Handling
-- [ ] Define `TypeError` enum using thiserror
-  - [ ] MissingReturnType variant
-  - [ ] UntypedDtoField variant
-  - [ ] NonSerializableReturn variant
-  - [ ] TypeMismatch variant
-  - [ ] IncompatibleTypes variant
-- [ ] Include span information in all errors
-- [ ] Collect all type errors
+- [x] Define `TypeError` enum using thiserror
+  - [x] MissingReturnType variant
+  - [x] UntypedDtoField variant
+  - [x] NonSerializableReturn variant
+  - [x] TypeMismatch variant
+  - [x] IncompatibleTypes variant
+- [x] Include span information in all errors
+- [x] Collect all type errors
 
 ### 4.7 Type Checker Tests
-- [ ] Unit test: infer expression types
-- [ ] Unit test: check return type annotations required
-- [ ] Unit test: check DTO fields must be typed
-- [ ] Unit test: check controller handlers return Result
-- [ ] Unit test: check serializable types
-- [ ] Unit test: error on non-serializable return
-- [ ] Unit test: error on type mismatch
-- [ ] Unit test: generic type checking
+- [x] Unit test: infer expression types
+- [x] Unit test: check return type annotations required
+- [x] Unit test: check DTO fields must be typed
+- [x] Unit test: check controller handlers return Result
+- [x] Unit test: check serializable types
+- [x] Unit test: error on non-serializable return
+- [x] Unit test: error on type mismatch
+- [x] Unit test: generic type checking
 
 ---
 
